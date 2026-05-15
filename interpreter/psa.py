@@ -18,9 +18,11 @@
 #   and emits valid .ps source. Two-pass: first pass records label→instruction
 #   index, second pass encodes each instruction as repeated 'patrick' tokens
 #   plus spaces. Input format: one instruction per line, semicolons introduce
-#   comments, labels end with colon. Supports all v1.0.0 mnemonics. Also:
-#   psa.py, PatrickScript assembler, assembly language, PUSH ADD JUMP JUMPZ
-#   JUMPNZ HALT labels, mnemonic-to-source, two-pass assembler.
+#   comments, labels end with colon. Supports all v1.1.0 mnemonics including
+#   CALL/RET. Directive: .string "text" emits PUSH+OUTCHAR for each character.
+#   Also: psa.py, PatrickScript assembler, assembly language, PUSH ADD JUMP
+#   JUMPZ JUMPNZ HALT CALL RET labels, mnemonic-to-source, two-pass assembler,
+#   string directive, v1.1.0.
 # rationale: >
 #   Writing raw PatrickScript source is impractical — counting 'patrick' tokens
 #   by hand for PUSH 42 means writing 1 patrick and 43 spaces. Without the
@@ -37,25 +39,31 @@
 #   - "psa.py assembler format"
 # @scry.entry.end -->
 """
-PatrickScript assembler.
+PatrickScript assembler (v1.1.0).
 
 Reads a .psa (assembly) file and emits .ps (PatrickScript source) to stdout.
 
 Assembly format:
     MNEMONIC [ARG]    ; optional comment
-    label:            ; defines a label (target for JUMP/JUMPZ/JUMPNZ)
+    label:            ; defines a label (target for JUMP/JUMPZ/JUMPNZ/CALL)
+    .string "text"    ; directive: emit PUSH+OUTCHAR for each character
 
-Labels are resolved on a second pass. Jump targets may be either a label
-name or a bare integer (0-based instruction index).
+Labels are resolved on a second pass. Jump/CALL targets may be either a
+label name or a bare integer (0-based instruction index).
 
-All v1.0.0 mnemonics are supported:
+All v1.1.0 mnemonics are supported:
     PUSH n   POP   DUP   SWAP   ROT
     ADD  SUB  MUL  DIV  MOD  NEG
     EQ   LT   GT   AND  OR   XOR  NOT
     JUMP target   JUMPZ target   JUMPNZ target
+    CALL target   RET
     INCHAR  OUTCHAR  INNUM  OUTNUM
     LOAD  STORE
     HALT
+
+Directives:
+    .string "text"   — emit one PUSH c / OUTCHAR pair per character.
+                       Supports escape sequences: \\n \\t \\\\ \\"
 
 Usage:
     python psa.py <program.psa>           # emit .ps to stdout
@@ -102,10 +110,12 @@ MNEMONIC_TABLE: dict[str, tuple[int, int | None]] = {
     "LOAD":    (9,  0),
     "STORE":   (9,  1),
     "HALT":    (10, 0),
+    "CALL":    (11, None),
+    "RET":     (12, 0),
 }
 
 # Mnemonics that take a numeric/label argument
-TAKES_ARG = {"PUSH", "JUMP", "JUMPZ", "JUMPNZ"}
+TAKES_ARG = {"PUSH", "JUMP", "JUMPZ", "JUMPNZ", "CALL"}
 
 
 def _asm_error(line_no: int, line: str, msg: str) -> None:
@@ -115,6 +125,40 @@ def _asm_error(line_no: int, line: str, msg: str) -> None:
         file=sys.stderr,
     )
     sys.exit(1)
+
+
+def _parse_string_literal(raw: str, line_no: int, line: str) -> str:
+    """
+    Parse a double-quoted string literal from `raw` (the rest of a .string line).
+    Supports escape sequences: \\n \\t \\\\ \\"
+    Returns the decoded string.
+    """
+    raw = raw.strip()
+    if not (raw.startswith('"') and raw.endswith('"') and len(raw) >= 2):
+        _asm_error(line_no, line,
+                   f'.string argument must be a double-quoted string, got: {raw!r}')
+    inner = raw[1:-1]
+    # Process escape sequences manually
+    result = []
+    i = 0
+    while i < len(inner):
+        if inner[i] == '\\' and i + 1 < len(inner):
+            esc = inner[i + 1]
+            if esc == 'n':
+                result.append('\n')
+            elif esc == 't':
+                result.append('\t')
+            elif esc == '\\':
+                result.append('\\')
+            elif esc == '"':
+                result.append('"')
+            else:
+                _asm_error(line_no, line, f'unknown escape sequence \\{esc}')
+            i += 2
+        else:
+            result.append(inner[i])
+            i += 1
+    return ''.join(result)
 
 
 def assemble(source: str) -> str:
@@ -147,6 +191,22 @@ def assemble(source: str) -> str:
                 _asm_error(line_no, lines[line_no - 1],
                            f"duplicate label '{label}'")
             labels[label] = len(instructions)
+            continue
+
+        # Directive: .string "text"
+        if line.startswith("."):
+            directive, _, rest = line.partition(" ")
+            directive = directive.lower()
+            if directive == ".string":
+                text = _parse_string_literal(rest.strip(), line_no,
+                                             lines[line_no - 1])
+                for ch in text:
+                    # Each character expands to PUSH ord(ch) + OUTCHAR
+                    instructions.append(("PUSH",    str(ord(ch)), line_no))
+                    instructions.append(("OUTCHAR", None,         line_no))
+            else:
+                _asm_error(line_no, lines[line_no - 1],
+                           f"unknown directive '{directive}'")
             continue
 
         # Instruction

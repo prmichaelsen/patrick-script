@@ -13,12 +13,13 @@
 #   - "python"
 #   - "reference-implementation"
 # summary: >
-#   PatrickScript v1.0.0 reference interpreter in Python. Parses word/gap token
+#   PatrickScript v1.1.0 reference interpreter in Python. Parses word/gap token
 #   pairs, executes stack machine semantics: PUSH, POP, DUP, SWAP, ROT, arithmetic
 #   (ADD/SUB/MUL/DIV/MOD/NEG), comparison/bitwise (EQ/LT/GT/AND/OR/XOR/NOT),
-#   control flow (JUMP/JUMPZ/JUMPNZ), I/O (INCHAR/OUTCHAR/INNUM/OUTNUM),
+#   control flow (JUMP/JUMPZ/JUMPNZ/CALL/RET), I/O (INCHAR/OUTCHAR/INNUM/OUTNUM),
 #   memory (LOAD/STORE), HALT. Also: ps.py, PatrickScript interpreter, reference
-#   implementation, conformance, stack machine, unary encoding.
+#   implementation, conformance, stack machine, unary encoding, v1.1.0, CALL, RET,
+#   subroutines.
 # rationale: >
 #   Without this file a future wake has no way to test PatrickScript programs.
 #   This is the canonical arbiter of language semantics when the spec is ambiguous.
@@ -32,7 +33,7 @@
 #   - "reference implementation PatrickScript"
 # @scry.entry.end -->
 """
-PatrickScript v1.0.0 reference interpreter.
+PatrickScript v1.1.0 reference interpreter.
 
 Usage:
     python ps.py <program.ps>
@@ -142,6 +143,8 @@ MNEMONICS = {
     (9, 0): ("LOAD", "pop addr → push mem[addr]"),
     (9, 1): ("STORE", "pop val addr → mem[addr]=val"),
     (10, None): ("HALT", "terminate"),
+    (11, None): ("CALL n", "push return addr; jump to n"),
+    (12, None): ("RET", "pop return addr; jump there"),
 }
 
 
@@ -324,10 +327,30 @@ def execute(instructions: list[tuple[int, int]]) -> None:
         elif arity == 10:
             sys.exit(0)
 
+        # --- Arity 11: CALL ---
+        elif arity == 11:
+            target = gap_arg
+            if target >= prog_len:
+                _runtime_error(
+                    f"CALL target {target} out of bounds (program length {prog_len})"
+                )
+            stack.append(ip)  # push return address (ip already advanced)
+            ip = target
+
+        # --- Arity 12: RET ---
+        elif arity == 12:
+            ret_addr = pop()
+            if ret_addr < 0 or ret_addr > prog_len:
+                _runtime_error(
+                    f"RET target {ret_addr} out of bounds (program length {prog_len})"
+                )
+            ip = ret_addr
+
         # --- Illegal ---
         else:
             _runtime_error(
-                f"illegal instruction arity {arity} at instruction {ip-1}"
+                f"illegal instruction arity {arity} at instruction {ip-1} "
+                f"(arities 13+ are reserved)"
             )
 
     # Fell off end of program — implicit halt

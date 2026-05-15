@@ -1,0 +1,23 @@
+; call-nested: nested subroutine calls
+; outer calls inner; inner prints "AB\n"; outer prints "C\n"
+; Tests that return addresses are properly stacked on nested CALL.
+CALL outer      ; instruction 0: push ret=1, jump to outer
+HALT            ; instruction 1
+
+outer:          ; instruction 2
+  CALL inner    ; instruction 2: push ret=3, jump to inner
+                ; instruction 3
+  PUSH 67       ; C
+  OUTCHAR       ; instruction 4
+  PUSH 10       ; newline
+  OUTCHAR       ; instruction 6
+  RET           ; instruction 7: return to instruction 1 (HALT)
+
+inner:          ; instruction 8
+  PUSH 65       ; A
+  OUTCHAR       ; instruction 9
+  PUSH 66       ; B
+  OUTCHAR       ; instruction 11
+  PUSH 10       ; newline
+  OUTCHAR       ; instruction 13
+  RET           ; instruction 14: return to instruction 3

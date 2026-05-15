@@ -14,14 +14,15 @@ tags:
   - "unary-encoding"
   - "turing-complete"
 summary: >
-  PatrickScript v1.0.0 — a Turing-complete stack-based language with exactly
+  PatrickScript v1.1.0 — a Turing-complete stack-based language with exactly
   two lexical tokens: the word `patrick` and a single space. Word arity (count
   of consecutive `patrick` tokens) selects the opcode family; gap width (count
   of consecutive spaces) encodes the immediate argument. The machine has a value
-  stack, integer-addressed memory, and byte-width I/O. Designed and owned by the
-  patrick-script-worker track. Also: PatrickScript, two-token language, unary
-  encoding, opcode-by-count, gap-encodes-arg, stack machine, esolang, Turing
-  complete, reference spec, v1.0.0.
+  stack, integer-addressed memory, byte-width I/O, and subroutine support via
+  CALL/RET (v1.1.0). Designed and owned by the patrick-script-worker track.
+  Also: PatrickScript, two-token language, unary encoding, opcode-by-count,
+  gap-encodes-arg, stack machine, esolang, Turing complete, reference spec,
+  v1.1.0, CALL, RET, subroutines.
 rationale: >
   Without this spec, no implementation is correct by definition. Every design
   decision about PatrickScript lives here. An implementation written without
@@ -45,7 +46,7 @@ seeded_questions:
 
 # PatrickScript Language Specification
 
-**Version**: 1.0.0
+**Version**: 1.1.0
 **Status**: active
 **Authored by**: patrick-script-worker track, 2026-05-15
 
@@ -248,10 +249,33 @@ branch is taken.
 | ----- | ------- | -------- | ------------ | -------------------------------------- |
 | 10    | any     | HALT     | —            | Terminate the program with exit code 0 |
 
-### 5.8 Reserved and Illegal Instructions
+### 5.8 Subroutines (v1.1.0)
 
-Arities 11 and above are reserved for future versions. An instruction
-with arity ≥ 11 is a runtime error in v1.0.0.
+| Arity | gap_arg | Mnemonic | Stack effect     | Description                            |
+| ----- | ------- | -------- | ---------------- | -------------------------------------- |
+| 11    | n       | CALL     | → ret            | Push (IP+1); jump to instruction n     |
+| 12    | any     | RET      | ret →            | Pop ret; jump to instruction ret       |
+
+**CALL n** saves the return address (the index of the instruction
+immediately following CALL) by pushing it onto the value stack, then
+sets IP to n. Execution continues from instruction n.
+
+**RET** pops the top of the value stack as a return address and sets IP
+to it. If the stack is empty when RET executes, it is a stack underflow
+error. If the popped value is not a valid instruction index, it is a
+jump-out-of-bounds error.
+
+The gap_arg of CALL is the jump target (like JUMP). The gap_arg of RET
+is ignored (like HALT).
+
+Subroutines can be nested: each CALL pushes a return address, and each
+matching RET pops it. Recursive calls are legal but may exhaust stack
+space in practice.
+
+### 5.9 Reserved and Illegal Instructions
+
+Arities 13 and above are reserved for future versions. An instruction
+with arity ≥ 13 is a runtime error in v1.1.0.
 
 There is no instruction with arity 0 (a zero-length word is not
 grammatically possible).
@@ -269,7 +293,7 @@ message to stderr.
 | Stack underflow            | POP on empty stack                              |
 | Division by zero           | DIV or MOD with 0 on top                        |
 | Jump out of bounds         | JUMP n where n ≥ program length                 |
-| Illegal instruction        | word arity ≥ 11                                 |
+| Illegal instruction        | word arity ≥ 13                                 |
 | Illegal gap_arg for opcode | gap_arg outside defined range for a given arity |
 
 For arity 2, gap_arg values 4 and above are illegal.
@@ -279,6 +303,8 @@ For arities 5, 6, 7, any gap_arg is legal (it is the target or unused).
 For arity 8, gap_arg values 4 and above are illegal.
 For arity 9, gap_arg values 2 and above are illegal.
 For arity 10 (HALT), all gap_arg values are legal.
+For arity 11 (CALL), any gap_arg is legal (it is the target address).
+For arity 12 (RET), all gap_arg values are legal (the gap_arg is ignored).
 
 **Lexical errors** (illegal characters in source) are parse-time errors
 and MUST cause the interpreter to exit with a non-zero exit code before
@@ -321,6 +347,8 @@ Below, `p` stands for `patrick` (7 characters) and `·` for a space:
 | OUTCHAR     | 8     | 1       | `pppppppp··`                  |
 | LOAD        | 9     | 0       | `ppppppppp·`                  |
 | HALT        | 10    | 0       | `pppppppppp`                  |
+| CALL 3      | 11    | 3       | `ppppppppppp····`             |
+| RET         | 12    | 0       | `pppppppppppp·`               |
 
 A concrete example: OUTCHAR followed by HALT is the byte sequence
 `patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick`
@@ -398,14 +426,119 @@ Instruction 7: POP           (arity=2, gap_arg=0) — discard sentinel -1
 Instruction 8: HALT          (arity=10, gap_arg=0) — done
 ```
 
+### 9.4 FizzBuzz (1 to 15)
+
+The canonical Turing-completeness demonstration. Uses memory (STORE/LOAD) to
+hold the loop counter and a printed-flag, MOD for divisibility tests,
+JUMPZ/JUMPNZ for branching, OUTCHAR for string output, and OUTNUM for
+integer output. The source `examples/fizzbuzz.psa` is 70 instructions; the
+compiled `.ps` form is 3,361 bytes.
+
+**Design sketch** (register map: mem[0] = n, mem[1] = printed_flag):
+
+```
+; --- Init ---
+PUSH 1; PUSH 0; STORE        ;; mem[0] = 1
+
+main_loop:
+  PUSH 0; LOAD               ;; n
+  PUSH 15; GT; JUMPNZ done   ;; n > 15 → halt
+
+  PUSH 0; PUSH 1; STORE      ;; printed_flag = 0
+
+  ; Fizz check
+  PUSH 0; LOAD; PUSH 3; MOD
+  JUMPNZ check_buzz          ;; n%3 != 0 → skip
+  OUTCHAR 'F','i','z','z'
+  PUSH 1; PUSH 1; STORE      ;; printed_flag = 1
+
+check_buzz:
+  PUSH 0; LOAD; PUSH 5; MOD
+  JUMPNZ check_num           ;; n%5 != 0 → skip
+  OUTCHAR 'B','u','z','z'
+  PUSH 1; PUSH 1; STORE      ;; printed_flag = 1
+
+check_num:
+  PUSH 1; LOAD; JUMPNZ print_nl ;; printed_flag != 0 → newline only
+  PUSH 0; LOAD; OUTNUM           ;; otherwise print n (OUTNUM adds \n)
+  JUMP next_iter
+
+print_nl:
+  PUSH 10; OUTCHAR           ;; '\n'
+
+next_iter:
+  PUSH 0; LOAD; PUSH 1; ADD
+  PUSH 0; STORE              ;; n = n + 1
+  JUMP main_loop
+
+done:
+  HALT
+```
+
+Output for 1..15:
+```
+1
+2
+Fizz
+4
+Buzz
+Fizz
+7
+8
+Fizz
+Buzz
+11
+Fizz
+13
+14
+FizzBuzz
+```
+
+### 9.5 Factorial (n!)
+
+Computes n! for an integer read from stdin. Uses STORE/LOAD for an
+accumulator register, MUL for iteration. The source `corpus/factorial.psa`
+computes 5! = 120.
+
+**Design sketch** (register map: mem[0] = accumulator):
+
+```
+PUSH 1; PUSH 0; STORE    ;; mem[0] = 1 (acc)
+INNUM                    ;; read n
+loop:
+  DUP; JUMPZ done        ;; n == 0 → done
+  DUP
+  PUSH 0; LOAD           ;; acc
+  MUL
+  PUSH 0; STORE          ;; acc = acc * n
+  PUSH 1; SUB            ;; n = n - 1
+  JUMP loop
+done:
+  POP
+  PUSH 0; LOAD; OUTNUM   ;; print acc
+  HALT
+```
+
 ---
 
 ## 10. Versioning
 
-This specification is v1.0.0. Future versions add instructions via
-currently-reserved arities (11+) or extend the gap_arg space for
-existing arities. A v1.0.0-conformant interpreter MUST treat reserved
-arities as runtime errors.
+### v1.0.0 (2026-05-15)
+
+Initial release. Stack machine with 10 arities: PUSH (1), stack ops (2),
+arithmetic (3), comparison/bitwise (4), JUMP/JUMPZ/JUMPNZ (5–7), I/O
+(8), memory (9), HALT (10). Arities 11+ reserved.
+
+### v1.1.0 (2026-05-15)
+
+Adds subroutine support: CALL (arity 11) and RET (arity 12). Arities 13+
+remain reserved. A v1.1.0-conformant interpreter executes CALL and RET
+as specified in section 5.8; it treats arities ≥ 13 as runtime errors.
+A v1.0.0-only interpreter that encounters arity 11 or 12 is permitted to
+treat them as runtime errors (reserved instruction).
+
+Future versions add instructions via currently-reserved arities (13+) or
+extend the gap_arg space for existing arities.
 
 Version is declared in the spec document title, not in the source
 language (PatrickScript has no pragma syntax).

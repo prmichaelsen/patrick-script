@@ -1,0 +1,1 @@
+CALL+RET with .string: calls print_hello subroutine twice, each printing 'Hi\n' via string directive. Validates both v1.1.0 features together.

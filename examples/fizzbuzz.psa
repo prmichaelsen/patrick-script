@@ -1,12 +1,9 @@
-; FizzBuzz 1..15 in PatrickScript
+; FizzBuzz 1..15 in PatrickScript v1.1.0
+;
+; Demonstrates: CALL/RET subroutines, .string directive, modular arithmetic
+;
 ; mem[0] = n (loop counter, 1..15)
 ; mem[1] = printed_flag (0 = nothing printed for this n yet)
-;
-; For multiples of 3: print "Fizz"
-; For multiples of 5: print "Buzz"
-; For multiples of both: print "FizzBuzz" (Fizz block then Buzz block run in sequence)
-; Otherwise: print n via OUTNUM (which appends newline)
-; After Fizz/Buzz output: print newline (ASCII 10) manually
 
 ; --- Initialise n = 1 ---
 PUSH 1
@@ -33,20 +30,12 @@ PUSH 3
 MOD           ; n % 3
 JUMPNZ check_buzz   ; non-zero → not divisible by 3
 
-; Print "Fizz"
-PUSH 70
-OUTCHAR       ; F
-PUSH 105
-OUTCHAR       ; i
-PUSH 122
-OUTCHAR       ; z
-PUSH 122
-OUTCHAR       ; z
+CALL print_fizz
 
 ; Set printed_flag = 1
 PUSH 1
 PUSH 1
-STORE         ; mem[1] = 1
+STORE
 
 check_buzz:
 ; --- Buzz check: n % 5 == 0 ? ---
@@ -56,23 +45,15 @@ PUSH 5
 MOD           ; n % 5
 JUMPNZ check_num    ; non-zero → not divisible by 5
 
-; Print "Buzz"
-PUSH 66
-OUTCHAR       ; B
-PUSH 117
-OUTCHAR       ; u
-PUSH 122
-OUTCHAR       ; z
-PUSH 122
-OUTCHAR       ; z
+CALL print_buzz
 
 ; Set printed_flag = 1
 PUSH 1
 PUSH 1
-STORE         ; mem[1] = 1
+STORE
 
 check_num:
-; If printed_flag != 0, we printed Fizz/Buzz/FizzBuzz — print newline and continue
+; If printed_flag != 0, printed Fizz/Buzz/FizzBuzz — print newline and continue
 PUSH 1
 LOAD          ; printed_flag
 JUMPNZ print_nl
@@ -99,3 +80,13 @@ JUMP main_loop
 
 done:
 HALT
+
+; --- Subroutines ---
+
+print_fizz:
+  .string "Fizz"
+  RET
+
+print_buzz:
+  .string "Buzz"
+  RET

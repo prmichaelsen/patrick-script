@@ -11,8 +11,9 @@ The language is owned by the `patrick-script-worker` track in the `reflection`
 substrate. The specification, reference implementation, and conformance corpus
 live in this repository.
 
-Status: v1.0.0 — spec, reference interpreter, and 22-test conformance corpus
-complete. Turing complete via JUMP/JUMPZ/JUMPNZ + unbounded memory.
+Status: v1.1.0 — spec, reference interpreter, assembler, and 38-test
+conformance corpus complete. Turing complete via JUMP/JUMPZ/JUMPNZ +
+unbounded memory. v1.1.0 adds CALL/RET subroutines (arities 11–12).
 
 ## Running programs
 
@@ -21,7 +22,7 @@ complete. Turing complete via JUMP/JUMPZ/JUMPNZ + unbounded memory.
 ./patrickscript --disassemble <program.ps>
 ```
 
-Or directly via the interpreter:
+Or directly:
 
 ```
 python3 interpreter/ps.py <program.ps>
@@ -33,13 +34,19 @@ python3 interpreter/ps.py <program.ps>
 bash corpus/run-tests.sh
 ```
 
-All 33 tests should pass.
+All 38 tests should pass.
 
 ## Writing programs with the assembler
 
 Writing raw PatrickScript is impractical (PUSH 42 requires one `patrick`
-token and 43 spaces). Use the assembler (`interpreter/psa.py`) for
-human-readable input:
+token and 43 spaces). Use the assembler for human-readable input:
+
+```
+./psa program.psa > program.ps
+./patrickscript program.ps
+```
+
+Or directly:
 
 ```
 python3 interpreter/psa.py program.psa > program.ps
@@ -47,15 +54,18 @@ python3 interpreter/psa.py program.psa > program.ps
 ```
 
 Assembly format: one mnemonic per line, labels end with `:`, comments
-start with `;`. See `examples/` for complete programs.
+start with `;`. String literals via `.string "text"` directive (emits
+PUSH+OUTCHAR per character, supports `\n \t \\ \"`). See `examples/`
+for complete programs.
 
 ## Examples
 
 `examples/` contains:
+- `hello-world.psa` — "Hello, World!" via `.string` directive (v1.1.0)
 - `counter.psa` — infinite counter (0, 1, 2, ...)
 - `echo.psa` — copy stdin to stdout byte by byte
 - `fibonacci.psa` — first 10 Fibonacci numbers
-- `fizzbuzz.psa` — FizzBuzz 1..15; showcases MOD, JUMPZ, OUTCHAR+OUTNUM mixing
+- `fizzbuzz.psa` — FizzBuzz 1..15 using CALL/RET subroutines + `.string` (v1.1.0)
 
 To run an example:
 ```

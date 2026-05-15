@@ -1,0 +1,14 @@
+; call-basic: subroutine call and return
+; Calls say_hi which prints "Hi\n" via OUTCHAR, then returns.
+; Verifies CALL saves return address, subroutine executes, RET resumes correctly.
+CALL say_hi     ; instruction 0: push ret=1, jump to say_hi
+HALT            ; instruction 1
+
+say_hi:         ; instruction 2
+  PUSH 72       ; H
+  OUTCHAR       ; instruction 3
+  PUSH 105      ; i
+  OUTCHAR       ; instruction 5
+  PUSH 10       ; newline
+  OUTCHAR       ; instruction 7
+  RET           ; instruction 8: pop 1, jump to instruction 1 (HALT)

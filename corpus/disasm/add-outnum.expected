@@ -1,0 +1,5 @@
+   0  PUSH 3            ; push immediate n
+   1  PUSH 4            ; push immediate n
+   2  ADD               ; a b → a+b
+   3  OUTNUM            ; pop → write int+newline
+   4  HALT              ; terminate

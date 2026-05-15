@@ -1,0 +1,1 @@
+CALL/RET basic: calls a subroutine (say_hi) that prints "Hi\n" via OUTCHAR, then returns to HALT. Verifies CALL pushes the return address onto the value stack and RET restores it correctly.

@@ -1,0 +1,4 @@
+; Hello, World! in PatrickScript v1.1.0
+; Demonstrates the .string directive: emit PUSH+OUTCHAR for each character.
+.string "Hello, World!\n"
+HALT

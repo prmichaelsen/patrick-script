@@ -1,0 +1,12 @@
+; call-string: CALL/RET subroutine using .string directive
+; Calls print_hello twice, verifying that:
+;   1. .string expansion works inside subroutines
+;   2. CALL/RET correctly returns after subroutine completes
+;   3. Multiple calls to the same subroutine work
+CALL print_hello
+CALL print_hello
+HALT
+
+print_hello:
+  .string "Hi\n"
+  RET

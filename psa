@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+# <!-- @scry.entry
+# id: code.patrickscript-assembler-wrapper~470f115d
+# kind: code
+# status: active
+# weight: 0.7
+# tags:
+#   - "topic:patrickscript"
+#   - "topic:tooling"
+#   - "patrickscript"
+#   - "assembler"
+#   - "psa"
+#   - "wrapper"
+#   - "shell-script"
+#   - "cli"
+# summary: >
+#   PatrickScript assembler shell wrapper. Resolves the assembler path relative
+#   to the script and delegates to python3 interpreter/psa.py. Compile .psa
+#   assembly to .ps binary source via: psa program.psa > program.ps. Also:
+#   psa wrapper, PatrickScript assembler CLI, compile psa to ps.
+# rationale: >
+#   Without this, compiling a .psa file requires knowing the interpreter path.
+#   The wrapper lets users run './psa prog.psa > prog.ps' from anywhere in
+#   the project tree, symmetric with the './patrickscript prog.ps' runner.
+# applies: >
+#   compiling PatrickScript assembly, running psa.py, writing PatrickScript
+#   programs, adding PatrickScript to PATH
+# seeded_questions:
+#   - "How do I compile a PatrickScript assembly file?"
+#   - "PatrickScript assembler command line"
+#   - "psa wrapper"
+#   - "compile .psa to .ps"
+# @scry.entry.end -->
+# PatrickScript assembler — shell wrapper for psa.py
+# Usage: psa <program.psa>         # emit .ps to stdout
+#        psa --help                # show usage
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ASM="$SCRIPT_DIR/interpreter/psa.py"
+
+if ! command -v python3 &>/dev/null; then
+    echo "error: python3 is required to run the PatrickScript assembler" >&2
+    exit 2
+fi
+
+exec python3 "$ASM" "$@"
