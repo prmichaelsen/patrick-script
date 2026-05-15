@@ -18,12 +18,13 @@
 #   and emits valid .ps source. Two-pass: first pass records label→instruction
 #   index, second pass encodes each instruction as repeated 'patrick' tokens
 #   plus spaces. Input format: one instruction per line, semicolons introduce
-#   comments, labels end with colon. Supports all v1.2.0 mnemonics including
-#   CALL/RET and PUSHN (negative immediate). Directive: .string "text" emits
-#   PUSH+OUTCHAR for each character.
-#   Also: psa.py, PatrickScript assembler, assembly language, PUSH PUSHN ADD
-#   JUMP JUMPZ JUMPNZ HALT CALL RET labels, mnemonic-to-source, two-pass
-#   assembler, string directive, v1.2.0, negative literal, PUSHN.
+#   comments, labels end with colon. Supports all v1.3.0 mnemonics including
+#   CALL/RET, PUSHN (negative immediate), and PICK (stack copy). Directive:
+#   .string "text" emits PUSH+OUTCHAR for each character.
+#   Also: psa.py, PatrickScript assembler, assembly language, PUSH PUSHN PICK
+#   ADD JUMP JUMPZ JUMPNZ HALT CALL RET labels, mnemonic-to-source, two-pass
+#   assembler, string directive, v1.3.0, negative literal, PUSHN, PICK,
+#   stack copy.
 # rationale: >
 #   Writing raw PatrickScript source is impractical — counting 'patrick' tokens
 #   by hand for PUSH 42 means writing 1 patrick and 43 spaces. Without the
@@ -40,7 +41,7 @@
 #   - "psa.py assembler format"
 # @scry.entry.end -->
 """
-PatrickScript assembler (v1.2.0).
+PatrickScript assembler (v1.3.0).
 
 Reads a .psa (assembly) file and emits .ps (PatrickScript source) to stdout.
 
@@ -52,7 +53,7 @@ Assembly format:
 Labels are resolved on a second pass. Jump/CALL targets may be either a
 label name or a bare integer (0-based instruction index).
 
-All v1.2.0 mnemonics are supported:
+All v1.3.0 mnemonics are supported:
     PUSH n   PUSHN n   POP   DUP   SWAP   ROT
     ADD  SUB  MUL  DIV  MOD  NEG
     EQ   LT   GT   AND  OR   XOR  NOT
@@ -60,10 +61,13 @@ All v1.2.0 mnemonics are supported:
     CALL target   RET
     INCHAR  OUTCHAR  INNUM  OUTNUM
     LOAD  STORE
-    HALT
+    PICK n   HALT
 
 PUSHN n pushes the negative value -n onto the stack. This avoids the
 two-instruction PUSH n / NEG pattern for negative constants.
+
+PICK n copies the element n positions from the top (0-indexed). PICK 0
+is equivalent to DUP.
 
 Directives:
     .string "text"   — emit one PUSH c / OUTCHAR pair per character.
