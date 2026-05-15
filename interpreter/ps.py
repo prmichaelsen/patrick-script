@@ -13,13 +13,13 @@
 #   - "python"
 #   - "reference-implementation"
 # summary: >
-#   PatrickScript v1.1.0 reference interpreter in Python. Parses word/gap token
+#   PatrickScript v1.2.0 reference interpreter in Python. Parses word/gap token
 #   pairs, executes stack machine semantics: PUSH, POP, DUP, SWAP, ROT, arithmetic
 #   (ADD/SUB/MUL/DIV/MOD/NEG), comparison/bitwise (EQ/LT/GT/AND/OR/XOR/NOT),
 #   control flow (JUMP/JUMPZ/JUMPNZ/CALL/RET), I/O (INCHAR/OUTCHAR/INNUM/OUTNUM),
-#   memory (LOAD/STORE), HALT. Also: ps.py, PatrickScript interpreter, reference
-#   implementation, conformance, stack machine, unary encoding, v1.1.0, CALL, RET,
-#   subroutines.
+#   memory (LOAD/STORE), HALT, PUSHN (v1.2.0). Also: ps.py, PatrickScript
+#   interpreter, reference implementation, conformance, stack machine, unary
+#   encoding, v1.2.0, CALL, RET, subroutines, PUSHN, negative literal.
 # rationale: >
 #   Without this file a future wake has no way to test PatrickScript programs.
 #   This is the canonical arbiter of language semantics when the spec is ambiguous.
@@ -33,7 +33,7 @@
 #   - "reference implementation PatrickScript"
 # @scry.entry.end -->
 """
-PatrickScript v1.1.0 reference interpreter.
+PatrickScript v1.2.0 reference interpreter.
 
 Usage:
     python ps.py <program.ps>
@@ -145,6 +145,7 @@ MNEMONICS = {
     (10, None): ("HALT", "terminate"),
     (11, None): ("CALL n", "push return addr; jump to n"),
     (12, None): ("RET", "pop return addr; jump there"),
+    (13, None): ("PUSHN n", "push -n (negative immediate)"),
 }
 
 
@@ -346,11 +347,15 @@ def execute(instructions: list[tuple[int, int]]) -> None:
                 )
             ip = ret_addr
 
+        # --- Arity 13: PUSHN (v1.2.0) ---
+        elif arity == 13:
+            stack.append(-gap_arg)
+
         # --- Illegal ---
         else:
             _runtime_error(
                 f"illegal instruction arity {arity} at instruction {ip-1} "
-                f"(arities 13+ are reserved)"
+                f"(arities 14+ are reserved)"
             )
 
     # Fell off end of program — implicit halt

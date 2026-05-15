@@ -1,0 +1,5 @@
+; pushn-basic: PUSHN pushes negative values
+; PUSHN 5 should push -5; OUTNUM prints it
+PUSHN 5
+OUTNUM
+HALT

@@ -1,0 +1,7 @@
+; pushn-arith: PUSHN used with arithmetic
+; Compute 10 + (-3) = 7
+PUSH 10
+PUSHN 3
+ADD
+OUTNUM
+HALT

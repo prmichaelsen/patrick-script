@@ -1,0 +1,1 @@
+PUSHN instruction (v1.2.0): push -n directly. Tests PUSHN 7 → -7, PUSHN 0 → 0, PUSHN 1 → -1.

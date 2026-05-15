@@ -1,0 +1,8 @@
+; pushn.psa — tests PUSHN (v1.2.0) negative-immediate instruction
+PUSHN 7       ; push -7
+OUTNUM        ; output: -7
+PUSHN 0       ; push 0
+OUTNUM        ; output: 0
+PUSHN 1       ; push -1
+OUTNUM        ; output: -1
+HALT

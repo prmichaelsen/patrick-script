@@ -18,11 +18,12 @@
 #   and emits valid .ps source. Two-pass: first pass records label→instruction
 #   index, second pass encodes each instruction as repeated 'patrick' tokens
 #   plus spaces. Input format: one instruction per line, semicolons introduce
-#   comments, labels end with colon. Supports all v1.1.0 mnemonics including
-#   CALL/RET. Directive: .string "text" emits PUSH+OUTCHAR for each character.
-#   Also: psa.py, PatrickScript assembler, assembly language, PUSH ADD JUMP
-#   JUMPZ JUMPNZ HALT CALL RET labels, mnemonic-to-source, two-pass assembler,
-#   string directive, v1.1.0.
+#   comments, labels end with colon. Supports all v1.2.0 mnemonics including
+#   CALL/RET and PUSHN (negative immediate). Directive: .string "text" emits
+#   PUSH+OUTCHAR for each character.
+#   Also: psa.py, PatrickScript assembler, assembly language, PUSH PUSHN ADD
+#   JUMP JUMPZ JUMPNZ HALT CALL RET labels, mnemonic-to-source, two-pass
+#   assembler, string directive, v1.2.0, negative literal, PUSHN.
 # rationale: >
 #   Writing raw PatrickScript source is impractical — counting 'patrick' tokens
 #   by hand for PUSH 42 means writing 1 patrick and 43 spaces. Without the
@@ -39,7 +40,7 @@
 #   - "psa.py assembler format"
 # @scry.entry.end -->
 """
-PatrickScript assembler (v1.1.0).
+PatrickScript assembler (v1.2.0).
 
 Reads a .psa (assembly) file and emits .ps (PatrickScript source) to stdout.
 
@@ -51,8 +52,8 @@ Assembly format:
 Labels are resolved on a second pass. Jump/CALL targets may be either a
 label name or a bare integer (0-based instruction index).
 
-All v1.1.0 mnemonics are supported:
-    PUSH n   POP   DUP   SWAP   ROT
+All v1.2.0 mnemonics are supported:
+    PUSH n   PUSHN n   POP   DUP   SWAP   ROT
     ADD  SUB  MUL  DIV  MOD  NEG
     EQ   LT   GT   AND  OR   XOR  NOT
     JUMP target   JUMPZ target   JUMPNZ target
@@ -60,6 +61,9 @@ All v1.1.0 mnemonics are supported:
     INCHAR  OUTCHAR  INNUM  OUTNUM
     LOAD  STORE
     HALT
+
+PUSHN n pushes the negative value -n onto the stack. This avoids the
+two-instruction PUSH n / NEG pattern for negative constants.
 
 Directives:
     .string "text"   — emit one PUSH c / OUTCHAR pair per character.
@@ -112,10 +116,11 @@ MNEMONIC_TABLE: dict[str, tuple[int, int | None]] = {
     "HALT":    (10, 0),
     "CALL":    (11, None),
     "RET":     (12, 0),
+    "PUSHN":   (13, None),
 }
 
 # Mnemonics that take a numeric/label argument
-TAKES_ARG = {"PUSH", "JUMP", "JUMPZ", "JUMPNZ", "CALL"}
+TAKES_ARG = {"PUSH", "PUSHN", "JUMP", "JUMPZ", "JUMPNZ", "CALL"}
 
 
 def _asm_error(line_no: int, line: str, msg: str) -> None:

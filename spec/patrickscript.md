@@ -14,15 +14,16 @@ tags:
   - "unary-encoding"
   - "turing-complete"
 summary: >
-  PatrickScript v1.1.0 — a Turing-complete stack-based language with exactly
+  PatrickScript v1.2.0 — a Turing-complete stack-based language with exactly
   two lexical tokens: the word `patrick` and a single space. Word arity (count
   of consecutive `patrick` tokens) selects the opcode family; gap width (count
   of consecutive spaces) encodes the immediate argument. The machine has a value
-  stack, integer-addressed memory, byte-width I/O, and subroutine support via
-  CALL/RET (v1.1.0). Designed and owned by the patrick-script-worker track.
+  stack, integer-addressed memory, byte-width I/O, subroutine support via
+  CALL/RET (v1.1.0), and single-instruction negative literal PUSHN (v1.2.0).
+  Designed and owned by the patrick-script-worker track.
   Also: PatrickScript, two-token language, unary encoding, opcode-by-count,
   gap-encodes-arg, stack machine, esolang, Turing complete, reference spec,
-  v1.1.0, CALL, RET, subroutines.
+  v1.2.0, CALL, RET, subroutines, PUSHN, negative literal.
 rationale: >
   Without this spec, no implementation is correct by definition. Every design
   decision about PatrickScript lives here. An implementation written without
@@ -46,7 +47,7 @@ seeded_questions:
 
 # PatrickScript Language Specification
 
-**Version**: 1.1.0
+**Version**: 1.2.0
 **Status**: active
 **Authored by**: patrick-script-worker track, 2026-05-15
 
@@ -277,10 +278,26 @@ Subroutines can be nested: each CALL pushes a return address, and each
 matching RET pops it. Recursive calls are legal but may exhaust stack
 space in practice.
 
-### 5.9 Reserved and Illegal Instructions
+### 5.9 Negative Push (v1.2.0)
 
-Arities 13 and above are reserved for future versions. An instruction
-with arity ≥ 13 is a runtime error in v1.1.0.
+| Arity | gap_arg | Mnemonic | Stack effect | Description                            |
+| ----- | ------- | -------- | ------------ | -------------------------------------- |
+| 13    | n       | PUSHN    | → -n         | Push the integer −n onto the stack     |
+
+**PUSHN n** pushes the negation of its immediate argument. The argument
+n is encoded as gap_arg (≥ 0), so the pushed value is −n (≤ 0). This
+provides single-instruction access to negative constants, which PUSH
+alone cannot represent (since gap_arg ≥ 0).
+
+Examples: `PUSHN 5` pushes −5. `PUSHN 0` pushes 0 (same as `PUSH 0`).
+
+The two-instruction idiom `PUSH n / NEG` remains valid and equivalent.
+PUSHN is a convenience instruction, not a new capability.
+
+### 5.10 Reserved and Illegal Instructions
+
+Arities 14 and above are reserved for future versions. An instruction
+with arity ≥ 14 is a runtime error in v1.2.0.
 
 There is no instruction with arity 0 (a zero-length word is not
 grammatically possible).
@@ -298,7 +315,7 @@ message to stderr.
 | Stack underflow            | POP on empty stack                              |
 | Division by zero           | DIV or MOD with 0 on top                        |
 | Jump out of bounds         | JUMP n where n ≥ program length                 |
-| Illegal instruction        | word arity ≥ 13                                 |
+| Illegal instruction        | word arity ≥ 14                                 |
 | Illegal gap_arg for opcode | gap_arg outside defined range for a given arity |
 
 For arity 2, gap_arg values 4 and above are illegal.
@@ -310,6 +327,7 @@ For arity 9, gap_arg values 2 and above are illegal.
 For arity 10 (HALT), all gap_arg values are legal.
 For arity 11 (CALL), any gap_arg is legal (it is the target address).
 For arity 12 (RET), all gap_arg values are legal (the gap_arg is ignored).
+For arity 13 (PUSHN), any gap_arg is legal (it is the value to negate).
 
 **Lexical errors** (illegal characters in source) are parse-time errors
 and MUST cause the interpreter to exit with a non-zero exit code before
@@ -354,6 +372,7 @@ Below, `p` stands for `patrick` (7 characters) and `·` for a space:
 | HALT        | 10    | 0       | `pppppppppp`                  |
 | CALL 3      | 11    | 3       | `ppppppppppp····`             |
 | RET         | 12    | 0       | `pppppppppppp·`               |
+| PUSHN 5     | 13    | 5       | `ppppppppppppp······`         |
 
 A concrete example: OUTCHAR followed by HALT is the byte sequence
 `patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick`
@@ -609,24 +628,17 @@ as specified in section 5.8; it treats arities ≥ 13 as runtime errors.
 A v1.0.0-only interpreter that encounters arity 11 or 12 is permitted to
 treat them as runtime errors (reserved instruction).
 
-### v1.2.0 (planned)
+### v1.2.0 (2026-05-15)
 
-**PUSHN** (arity 13, gap_arg = n): push −n onto the stack. Provides
-single-instruction negative literal encoding. Without PUSHN, negative
-constants require two instructions: `PUSH n` then `NEG`. With PUSHN,
-`PUSHN 5` pushes −5 directly.
+Adds PUSHN (arity 13, gap_arg = n): pushes −n onto the stack. Provides
+single-instruction negative literal encoding. The two-instruction idiom
+`PUSH n / NEG` remains valid and equivalent; PUSHN is a convenience
+instruction. A v1.2.0-conformant interpreter executes PUSHN as specified
+in section 5.9; it treats arities ≥ 14 as runtime errors.
 
-Rationale: negative constants are needed in almost every non-trivial
-program (sentinel values, offsets, loop counters), and the two-instruction
-workaround is correct but verbose. PUSHN fills this gap with minimal ISA
-complexity — it does not require a sign bit in the encoding; it simply
-inverts n.
+Arities 14+ remain reserved.
 
-Arities 14+ remain reserved after v1.2.0.
-
----
-
-Future versions add instructions via currently-reserved arities (13+) or
+Future versions add instructions via currently-reserved arities (14+) or
 extend the gap_arg space for existing arities.
 
 Version is declared in the spec document title, not in the source
