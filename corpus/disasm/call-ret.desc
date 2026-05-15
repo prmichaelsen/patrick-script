@@ -1,1 +1,1 @@
-Disassemble CALL 2 / HALT / PUSH 72 / OUTCHAR / RET — verifies CALL and RET disassembly
+Disassemble CALL / HALT / PUSH / RET — verifies CALL/RET disassembly format

@@ -1,5 +1,4 @@
    0  CALL 2            ; push return addr; jump to n
    1  HALT              ; terminate
-   2  PUSH 72           ; push immediate n
-   3  OUTCHAR           ; pop → write byte
-   4  RET               ; pop return addr; jump there
+   2  PUSH 42           ; push immediate n
+   3  RET               ; pop return addr; jump there

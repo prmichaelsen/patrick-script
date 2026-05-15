@@ -1,0 +1,3 @@
+   0  PUSHN 7           ; push -n (negative immediate)
+   1  OUTNUM            ; pop → write int+newline
+   2  HALT              ; terminate

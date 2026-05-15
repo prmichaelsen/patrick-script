@@ -1,0 +1,4 @@
+; pushn: PUSHN instruction disassembly
+PUSHN 7
+OUTNUM
+HALT

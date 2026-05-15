@@ -1,0 +1,6 @@
+; call-ret: simple subroutine call and return
+CALL sub
+HALT
+sub:
+  PUSH 42
+  RET
