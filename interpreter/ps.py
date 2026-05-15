@@ -299,7 +299,8 @@ def execute(instructions: list[tuple[int, int]]) -> None:
                     stack.append(-1)
             elif gap_arg == 3: # OUTNUM
                 n = pop()
-                print(n)
+                sys.stdout.buffer.write((str(n) + '\n').encode())
+                sys.stdout.buffer.flush()
             else:
                 _runtime_error(
                     f"illegal gap_arg {gap_arg} for arity 8 at instruction {ip-1}"

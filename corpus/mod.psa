@@ -1,0 +1,8 @@
+; mod: modulo — 7 mod 3 = 1
+; Demonstrates: MOD (arity 3, gap 4)
+
+PUSH 7         ; 0: dividend
+PUSH 3         ; 1: divisor
+MOD            ; 2: 7 mod 3 = 1
+OUTNUM         ; 3: print 1
+HALT           ; 4

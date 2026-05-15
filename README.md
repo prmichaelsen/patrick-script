@@ -33,7 +33,7 @@ python3 interpreter/ps.py <program.ps>
 bash corpus/run-tests.sh
 ```
 
-All 22 tests should pass.
+All 33 tests should pass.
 
 ## Writing programs with the assembler
 
@@ -55,6 +55,7 @@ start with `;`. See `examples/` for complete programs.
 - `counter.psa` — infinite counter (0, 1, 2, ...)
 - `echo.psa` — copy stdin to stdout byte by byte
 - `fibonacci.psa` — first 10 Fibonacci numbers
+- `fizzbuzz.psa` — FizzBuzz 1..15; showcases MOD, JUMPZ, OUTCHAR+OUTNUM mixing
 
 To run an example:
 ```

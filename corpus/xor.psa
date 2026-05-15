@@ -1,0 +1,9 @@
+; xor: bitwise XOR
+; 5 ^ 3 = 6  (0b101 ^ 0b011 = 0b110)
+; Demonstrates: XOR (arity 4, gap 5)
+
+PUSH 5         ; 0
+PUSH 3         ; 1
+XOR            ; 2: 5 ^ 3 = 6
+OUTNUM         ; 3: print 6
+HALT           ; 4

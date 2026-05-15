@@ -1,0 +1,12 @@
+; rot: push 1 2 3, ROT rotates bottom element to top
+; ROT semantics: a b c (c=top) → b c a (a=new top)
+; Expected output: 1\n3\n2 (a=1 is new top, c=3 next, b=2 bottom)
+
+PUSH 1         ; 0: push 1 (bottom)
+PUSH 2         ; 1: push 2 (middle)
+PUSH 3         ; 2: push 3 (top)
+ROT            ; 3: stack becomes [2, 3, 1] (1 = new top)
+OUTNUM         ; 4: print 1
+OUTNUM         ; 5: print 3
+OUTNUM         ; 6: print 2
+HALT           ; 7

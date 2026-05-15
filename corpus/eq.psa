@@ -1,0 +1,15 @@
+; eq: equality comparison
+; 5 == 5 → 1, 5 == 3 → 0
+; Demonstrates: EQ (arity 4, gap 0)
+
+PUSH 5         ; 0
+PUSH 5         ; 1
+EQ             ; 2: 5 == 5 → 1
+OUTNUM         ; 3: print 1
+
+PUSH 5         ; 4
+PUSH 3         ; 5
+EQ             ; 6: 5 == 3 → 0
+OUTNUM         ; 7: print 0
+
+HALT           ; 8

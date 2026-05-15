@@ -1,0 +1,15 @@
+; lt: less-than comparison
+; 3 < 5 → 1, 5 < 3 → 0
+; Demonstrates: LT (arity 4, gap 1)
+
+PUSH 3         ; 0
+PUSH 5         ; 1
+LT             ; 2: 3 < 5 → 1
+OUTNUM         ; 3: print 1
+
+PUSH 5         ; 4
+PUSH 3         ; 5
+LT             ; 6: 5 < 3 → 0
+OUTNUM         ; 7: print 0
+
+HALT           ; 8

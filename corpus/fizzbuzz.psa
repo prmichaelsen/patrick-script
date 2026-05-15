@@ -1,0 +1,101 @@
+; FizzBuzz 1..15 in PatrickScript
+; mem[0] = n (loop counter, 1..15)
+; mem[1] = printed_flag (0 = nothing printed for this n yet)
+;
+; For multiples of 3: print "Fizz"
+; For multiples of 5: print "Buzz"
+; For multiples of both: print "FizzBuzz" (Fizz block then Buzz block run in sequence)
+; Otherwise: print n via OUTNUM (which appends newline)
+; After Fizz/Buzz output: print newline (ASCII 10) manually
+
+; --- Initialise n = 1 ---
+PUSH 1
+PUSH 0
+STORE         ; mem[0] = 1
+
+main_loop:
+; Load n, check if n > 15; if so, done
+PUSH 0
+LOAD          ; n
+PUSH 15
+GT            ; n > 15 ?
+JUMPNZ done   ; yes → halt
+
+; Reset printed_flag = 0
+PUSH 0
+PUSH 1
+STORE         ; mem[1] = 0
+
+; --- Fizz check: n % 3 == 0 ? ---
+PUSH 0
+LOAD          ; n
+PUSH 3
+MOD           ; n % 3
+JUMPNZ check_buzz   ; non-zero → not divisible by 3
+
+; Print "Fizz"
+PUSH 70
+OUTCHAR       ; F
+PUSH 105
+OUTCHAR       ; i
+PUSH 122
+OUTCHAR       ; z
+PUSH 122
+OUTCHAR       ; z
+
+; Set printed_flag = 1
+PUSH 1
+PUSH 1
+STORE         ; mem[1] = 1
+
+check_buzz:
+; --- Buzz check: n % 5 == 0 ? ---
+PUSH 0
+LOAD          ; n
+PUSH 5
+MOD           ; n % 5
+JUMPNZ check_num    ; non-zero → not divisible by 5
+
+; Print "Buzz"
+PUSH 66
+OUTCHAR       ; B
+PUSH 117
+OUTCHAR       ; u
+PUSH 122
+OUTCHAR       ; z
+PUSH 122
+OUTCHAR       ; z
+
+; Set printed_flag = 1
+PUSH 1
+PUSH 1
+STORE         ; mem[1] = 1
+
+check_num:
+; If printed_flag != 0, we printed Fizz/Buzz/FizzBuzz — print newline and continue
+PUSH 1
+LOAD          ; printed_flag
+JUMPNZ print_nl
+
+; Nothing printed — output n (OUTNUM adds its own newline)
+PUSH 0
+LOAD          ; n
+OUTNUM
+JUMP next_iter
+
+print_nl:
+PUSH 10
+OUTCHAR       ; newline
+
+next_iter:
+; n = n + 1
+PUSH 0
+LOAD          ; n
+PUSH 1
+ADD           ; n + 1
+PUSH 0
+STORE         ; mem[0] = n + 1
+JUMP main_loop
+
+done:
+HALT

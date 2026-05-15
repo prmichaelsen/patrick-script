@@ -1,0 +1,8 @@
+; div: integer division — floor(7 / 2) = 3
+; Demonstrates: DIV (arity 3, gap 3)
+
+PUSH 7         ; 0: numerator
+PUSH 2         ; 1: denominator
+DIV            ; 2: 7 / 2 = 3 (floor division)
+OUTNUM         ; 3: print 3
+HALT           ; 4
