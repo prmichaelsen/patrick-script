@@ -1,0 +1,1 @@
+Disassemble PUSH/DUP/JUMPZ/JUMP/SUB/HALT — verifies JUMP, JUMPZ disassembly with absolute targets

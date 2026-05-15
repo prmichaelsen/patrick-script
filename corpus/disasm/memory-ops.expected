@@ -1,0 +1,7 @@
+   0  PUSH 42           ; push immediate n
+   1  PUSH 0            ; push immediate n
+   2  STORE             ; pop val addr → mem[addr]=val
+   3  PUSH 0            ; push immediate n
+   4  LOAD              ; pop addr → push mem[addr]
+   5  OUTNUM            ; pop → write int+newline
+   6  HALT              ; terminate

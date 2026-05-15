@@ -1,0 +1,7 @@
+   0  PUSH 3            ; push immediate n
+   1  DUP               ; duplicate top
+   2  JUMPZ 5           ; if top==0, jump to n
+   3  PUSH 1            ; push immediate n
+   4  SUB               ; a b → a-b
+   5  JUMP 1            ; jump to instruction n
+   6  HALT              ; terminate

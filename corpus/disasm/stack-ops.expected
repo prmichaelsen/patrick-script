@@ -1,0 +1,8 @@
+   0  PUSH 1            ; push immediate n
+   1  PUSH 2            ; push immediate n
+   2  PUSH 3            ; push immediate n
+   3  ROT               ; rotate top three
+   4  SWAP              ; swap top two
+   5  POP               ; discard top
+   6  OUTNUM            ; pop → write int+newline
+   7  HALT              ; terminate

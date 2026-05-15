@@ -499,7 +499,9 @@ Fizz
 FizzBuzz
 ```
 
-### 9.5 Factorial (n!)
+### 9.5 Factorial (n!) — iterative
+
+
 
 Computes n! for an integer read from stdin. Uses STORE/LOAD for an
 accumulator register, MUL for iteration. The source `corpus/factorial.psa`
@@ -524,6 +526,71 @@ done:
   HALT
 ```
 
+### 9.6 Subroutine Calling Convention
+
+CALL pushes the return address on top of the value stack before jumping.
+This means on subroutine entry, the return address sits above any
+arguments the caller pushed — the opposite of most conventional calling
+conventions where the return address is at a known frame offset.
+
+The idiomatic pattern is **SWAP to expose arguments, SWAP back to
+restore**. For a single-argument subroutine:
+
+```
+; Caller:
+PUSH arg
+CALL sub           ;; stack on entry to sub: [..., arg, ret_addr]
+
+; Subroutine body:
+sub:
+  SWAP             ;; [..., ret_addr, arg]   — expose argument
+  < ... work on arg ... >
+  SWAP             ;; [..., result, ret_addr] — restore call frame
+  RET              ;; returns; result is now on top for caller
+```
+
+For zero-argument subroutines (output-only, side-effect routines), the
+return address is already on top and no SWAP is needed:
+
+```
+; Caller:
+CALL print_greeting
+
+; Subroutine:
+print_greeting:
+  PUSH 72; OUTCHAR   ;; 'H'
+  PUSH 105; OUTCHAR  ;; 'i'
+  PUSH 10; OUTCHAR   ;; '\n'
+  RET
+```
+
+For multi-argument subroutines, the convention extends via multiple
+SWAPs or ROT:
+
+```
+; Two-argument sub (a, b → result):
+; Caller pushes a then b, then CALL.
+; Entry stack: [..., a, b, ret_addr]
+
+sub2:
+  ROT              ;; [..., b, ret_addr, a]  — surface first arg
+  SWAP             ;; [..., b, a, ret_addr]  — expose both args below ret
+  < ... work on a and b ... >   ;; stack: [..., result, ret_addr]
+  RET
+```
+
+**Recursive subroutines** work naturally: each CALL pushes a new return
+address above the current frame's values. The recursive factorial in
+`corpus/factorial-recursive.psa` demonstrates this pattern — each
+recursive level pushes its `n` and then CALL pushes the return address;
+SWAP is used at subroutine entry to reorder them for computation.
+
+**Key invariant**: at each RET, the return address must be on top of the
+stack with the result(s) below it. Violations (wrong stack depth, wrong
+top-of-stack) cause jump-out-of-bounds or return to a garbage address.
+The assembler's label system makes CALL targets readable, but the stack
+discipline at RET is the programmer's responsibility.
+
 ---
 
 ## 10. Versioning
@@ -541,6 +608,23 @@ remain reserved. A v1.1.0-conformant interpreter executes CALL and RET
 as specified in section 5.8; it treats arities ≥ 13 as runtime errors.
 A v1.0.0-only interpreter that encounters arity 11 or 12 is permitted to
 treat them as runtime errors (reserved instruction).
+
+### v1.2.0 (planned)
+
+**PUSHN** (arity 13, gap_arg = n): push −n onto the stack. Provides
+single-instruction negative literal encoding. Without PUSHN, negative
+constants require two instructions: `PUSH n` then `NEG`. With PUSHN,
+`PUSHN 5` pushes −5 directly.
+
+Rationale: negative constants are needed in almost every non-trivial
+program (sentinel values, offsets, loop counters), and the two-instruction
+workaround is correct but verbose. PUSHN fills this gap with minimal ISA
+complexity — it does not require a sign bit in the encoding; it simply
+inverts n.
+
+Arities 14+ remain reserved after v1.2.0.
+
+---
 
 Future versions add instructions via currently-reserved arities (13+) or
 extend the gap_arg space for existing arities.

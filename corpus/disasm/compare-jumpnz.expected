@@ -1,0 +1,10 @@
+   0  PUSH 5            ; push immediate n
+   1  PUSH 3            ; push immediate n
+   2  GT                ; a b → (a>b)
+   3  JUMPNZ 5          ; if top!=0, jump to n
+   4  PUSH 0            ; push immediate n
+   5  OUTNUM            ; pop → write int+newline
+   6  HALT              ; terminate
+   7  PUSH 1            ; push immediate n
+   8  OUTNUM            ; pop → write int+newline
+   9  HALT              ; terminate
