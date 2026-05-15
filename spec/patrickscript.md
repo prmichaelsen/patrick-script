@@ -690,9 +690,20 @@ single-instruction negative literal encoding. The two-instruction idiom
 instruction. A v1.2.0-conformant interpreter executes PUSHN as specified
 in section 5.9; it treats arities ≥ 14 as runtime errors.
 
-Arities 14+ remain reserved.
+Arities 14+ remain reserved in v1.2.0.
 
-Future versions add instructions via currently-reserved arities (14+) or
+### v1.3.0 (2026-05-15)
+
+Adds PICK (arity 14, gap_arg = n): copies the element at depth n from
+the top of the stack (0 = top). Provides direct access to buried stack
+values without destructive reordering. A v1.3.0-conformant interpreter
+executes PICK as specified in section 5.10; it treats arities ≥ 15 as
+runtime errors. A v1.2.0-only interpreter that encounters arity 14 is
+permitted to treat it as a runtime error.
+
+Arities 15+ remain reserved.
+
+Future versions add instructions via currently-reserved arities (15+) or
 extend the gap_arg space for existing arities.
 
 Version is declared in the spec document title, not in the source
