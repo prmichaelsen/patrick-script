@@ -1,0 +1,7 @@
+; stack-underflow: second POP on empty stack triggers runtime error
+; Expected output: (empty — error on stderr, exit 1)
+
+PUSH 1         ; 0: push one value
+POP            ; 1: pop it (stack now empty)
+POP            ; 2: underflow — runtime error
+HALT           ; 3: never reached

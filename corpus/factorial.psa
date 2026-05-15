@@ -1,0 +1,26 @@
+; factorial: compute 5! = 120 using memory-backed accumulator loop
+; Demonstrates: STORE, LOAD, MUL, JUMPNZ, DUP, SUB
+; Expected output: 120
+
+PUSH 1         ; 0: initial result = 1
+PUSH 0         ; 1: address 0
+STORE          ; 2: mem[0] = 1
+PUSH 5         ; 3: counter = 5
+
+loop:
+DUP            ; 4: copy counter for multiplication
+PUSH 0         ; 5: address 0
+LOAD           ; 6: push mem[0] (current result)
+MUL            ; 7: counter * result
+PUSH 0         ; 8: address 0
+STORE          ; 9: mem[0] = new result
+PUSH 1         ; 10: decrement by 1
+SUB            ; 11: counter - 1
+DUP            ; 12: copy for loop test
+JUMPNZ loop    ; 13: if counter != 0, loop
+
+POP            ; 14: drop the trailing 0
+PUSH 0         ; 15: address 0
+LOAD           ; 16: push mem[0] = 120
+OUTNUM         ; 17: print result
+HALT           ; 18

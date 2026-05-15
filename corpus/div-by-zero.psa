@@ -1,0 +1,8 @@
+; div-by-zero: DIV with divisor 0 triggers runtime error
+; Expected output: (empty — error on stderr, exit 1)
+
+PUSH 5         ; 0: dividend
+PUSH 0         ; 1: divisor (zero)
+DIV            ; 2: runtime error: division by zero
+OUTNUM         ; 3: never reached
+HALT           ; 4: never reached
