@@ -4,3 +4,5 @@ agent/
 # Python
 __pycache__/
 *.pyc
+dist/
+*.egg-info/
