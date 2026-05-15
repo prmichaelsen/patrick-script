@@ -11,7 +11,7 @@ The language is owned by the `patrick-script-worker` track in the `reflection`
 substrate. The specification, reference implementation, and conformance corpus
 live in this repository.
 
-Status: v1.3.0 — spec, reference interpreter, assembler, and 49-test
+Status: v1.3.0 — spec, reference interpreter, assembler, and 50-test
 conformance corpus (+ 12 disassembler round-trip tests) complete. Turing
 complete via JUMP/JUMPZ/JUMPNZ + unbounded memory. v1.1.0 adds CALL/RET
 subroutines (arities 11–12). v1.2.0 adds PUSHN single-instruction negative
@@ -82,6 +82,7 @@ for complete programs.
 - `call-string.psa` — CALL/RET subroutine called twice; `.string` inside subroutine (v1.1.0)
 - `square.psa` — compute n² using PICK 0 for non-destructive stack copy (v1.3.0)
 - `pick-demo.psa` — PICK 2 copies a deep stack element; prints four characters (v1.3.0)
+- `rot13.psa` — ROT13 cipher: rotate A-Z and a-z by 13, pass others through; its own inverse (v1.3.0)
 
 To run an example:
 ```

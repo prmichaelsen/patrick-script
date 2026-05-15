@@ -1,0 +1,69 @@
+; rot13.psa — ROT13 cipher: rotate A-Z and a-z by 13, pass-through others.
+; Reads stdin until EOF (-1 from INCHAR), writes transformed bytes to stdout.
+;
+; ROT13 is its own inverse: applying it twice restores the original text.
+; "Hello, World!" → "Uryyb, Jbeyq!" → "Hello, World!"
+;
+; Algorithm for uppercase c ∈ [65,90]:  ((c - 65 + 13) % 26) + 65
+; Algorithm for lowercase c ∈ [97,122]: ((c - 97 + 13) % 26) + 97
+; All other characters: unchanged.
+
+loop:
+    INCHAR              ; [c]
+    DUP                 ; [c, c]
+    PUSHN 1             ; [c, c, -1]
+    EQ                  ; [c, c==-1]
+    JUMPNZ done         ; exit if EOF (pops condition)
+
+    ; --- test uppercase A-Z (ASCII 65-90) ---
+    DUP                 ; [c, c]
+    PUSH 65             ; [c, c, 65]
+    LT                  ; [c, c<65]
+    JUMPNZ test_lower   ; if below 'A', skip uppercase check (pops)
+    DUP                 ; [c, c]
+    PUSH 91             ; [c, c, 91]
+    LT                  ; [c, c<91]
+    JUMPZ test_lower    ; if c>=91 (past 'Z'), skip (pops)
+
+    ; uppercase rotation: ((c - 65 + 13) % 26) + 65
+    PUSH 65             ; [c, 65]
+    SUB                 ; [c-65]
+    PUSH 13             ; [c-65, 13]
+    ADD                 ; [c-65+13]
+    PUSH 26             ; [c-65+13, 26]
+    MOD                 ; [(c-65+13)%26]
+    PUSH 65             ; [..., 65]
+    ADD                 ; [(c-65+13)%26+65]
+    OUTCHAR
+    JUMP loop
+
+test_lower:
+    ; --- test lowercase a-z (ASCII 97-122) ---
+    DUP                 ; [c, c]
+    PUSH 97             ; [c, c, 97]
+    LT                  ; [c, c<97]
+    JUMPNZ passthrough  ; if below 'a', pass through (pops)
+    DUP                 ; [c, c]
+    PUSH 123            ; [c, c, 123]
+    LT                  ; [c, c<123]
+    JUMPZ passthrough   ; if c>=123 (past 'z'), pass through (pops)
+
+    ; lowercase rotation: ((c - 97 + 13) % 26) + 97
+    PUSH 97             ; [c, 97]
+    SUB                 ; [c-97]
+    PUSH 13             ; [c-97, 13]
+    ADD                 ; [c-97+13]
+    PUSH 26             ; [c-97+13, 26]
+    MOD                 ; [(c-97+13)%26]
+    PUSH 97             ; [..., 97]
+    ADD                 ; [(c-97+13)%26+97]
+    OUTCHAR
+    JUMP loop
+
+passthrough:
+    OUTCHAR             ; output c unchanged
+    JUMP loop
+
+done:
+    POP                 ; discard EOF sentinel (-1)
+    HALT
