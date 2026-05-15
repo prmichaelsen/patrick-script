@@ -664,6 +664,38 @@ This pattern suits output routines, print helpers, and repeated
 fixed-work blocks. The `corpus/call-string.psa` test demonstrates
 it: `.string "Hi\n"` + `RET`, called twice.
 
+### 9.8 PICK for Non-Destructive Stack Access (v1.3.0)
+
+PICK reads a value from depth n without consuming it, avoiding the
+need to pop-and-reorder when the same value is needed more than once.
+
+**PICK 0** is equivalent to DUP: it copies the top element.
+
+**PICK n (n > 0)** copies an element buried below the top. The primary
+idiom: computing an expression that uses a value from deeper in the
+stack without removing it from its position.
+
+Example — compute `a + b + a` using PICK 1 to reuse `a`:
+
+```
+; a=3, b=7; compute 3 + 7 + 3 = 13
+PUSH 3      ;; stack: [3]
+PUSH 7      ;; stack: [3 7]  (7 on top)
+PICK 1      ;; copy a (depth 1): [3 7 3]
+ADD         ;; [3 10]
+ADD         ;; [13]
+OUTNUM      ;; outputs 13
+HALT
+```
+
+Without PICK, accessing `a` after pushing `b` would require storing
+`a` to memory and reloading it. PICK avoids the memory round-trip when
+the value is already on the stack.
+
+The `corpus/pick-deep.psa` test demonstrates accessing multiple
+depths: PICK 2 and PICK 1 used to non-destructively copy the first and
+second elements of a three-element stack.
+
 ---
 
 ## 10. Versioning

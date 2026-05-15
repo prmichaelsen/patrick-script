@@ -1,0 +1,1 @@
+PICK 1 non-destructive access: compute a + b + a = 3 + 7 + 3 = 13; demonstrates reusing a stack value without memory

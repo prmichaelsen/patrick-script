@@ -1,0 +1,11 @@
+; PICK 1 for non-destructive access: compute a + b + a
+; stack at start: [3 7] (b=7 on top)
+; PICK 1 copies a (depth 1) without consuming it
+; 3 + 7 + 3 = 13
+PUSH 3
+PUSH 7
+PICK 1
+ADD
+ADD
+OUTNUM
+HALT
