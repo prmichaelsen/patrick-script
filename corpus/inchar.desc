@@ -1,0 +1,1 @@
+INCHAR reads one byte ('A') from stdin; OUTCHAR writes it back

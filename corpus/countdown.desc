@@ -1,0 +1,1 @@
+JUMPNZ loop: counts down from 3 to 1 using DUP/SUB; prints 3, 2, 1

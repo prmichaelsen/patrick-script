@@ -1,0 +1,1 @@
+PUSH 0, JUMPZ skip (taken), PUSH 42, OUTNUM, HALT → prints 42 (skips PUSH 99)

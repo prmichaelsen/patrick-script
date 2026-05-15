@@ -1,0 +1,1 @@
+JUMPZ fires when top == 0; skips PUSH 99; prints 42

@@ -1,0 +1,10 @@
+; jumpz: JUMPZ fires when top == 0
+; Expected output: 42
+
+PUSH 0         ; 0: zero → JUMPZ fires
+JUMPZ output   ; 1: jump to output
+PUSH 99        ; 2: dead code — skipped
+output:
+PUSH 42        ; 3
+OUTNUM         ; 4
+HALT           ; 5

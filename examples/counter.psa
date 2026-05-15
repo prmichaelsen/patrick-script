@@ -1,0 +1,12 @@
+; counter.psa — print 0, 1, 2, 3, ... indefinitely
+;
+; Keeps the current value on top of stack.
+; Each iteration: duplicate, print, increment.
+
+PUSH 0         ; 0: initial counter value
+loop:
+DUP            ; 1: duplicate for printing (loop target)
+OUTNUM         ; 2: print current value
+PUSH 1         ; 3: push increment
+ADD            ; 4: counter + 1
+JUMP loop      ; 5: loop back to 1

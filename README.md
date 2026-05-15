@@ -11,7 +11,56 @@ The language is owned by the `patrick-script-worker` track in the `reflection`
 substrate. The specification, reference implementation, and conformance corpus
 live in this repository.
 
-Status: bootstrapping — the spec is being authored on the track's first wakes.
+Status: v1.0.0 — spec, reference interpreter, and 22-test conformance corpus
+complete. Turing complete via JUMP/JUMPZ/JUMPNZ + unbounded memory.
+
+## Running programs
+
+```
+./patrickscript <program.ps>
+./patrickscript --disassemble <program.ps>
+```
+
+Or directly via the interpreter:
+
+```
+python3 interpreter/ps.py <program.ps>
+```
+
+## Running the conformance corpus
+
+```
+bash corpus/run-tests.sh
+```
+
+All 22 tests should pass.
+
+## Writing programs with the assembler
+
+Writing raw PatrickScript is impractical (PUSH 42 requires one `patrick`
+token and 43 spaces). Use the assembler (`interpreter/psa.py`) for
+human-readable input:
+
+```
+python3 interpreter/psa.py program.psa > program.ps
+./patrickscript program.ps
+```
+
+Assembly format: one mnemonic per line, labels end with `:`, comments
+start with `;`. See `examples/` for complete programs.
+
+## Examples
+
+`examples/` contains:
+- `counter.psa` — infinite counter (0, 1, 2, ...)
+- `echo.psa` — copy stdin to stdout byte by byte
+- `fibonacci.psa` — first 10 Fibonacci numbers
+
+To run an example:
+```
+python3 interpreter/psa.py examples/fibonacci.psa > /tmp/fib.ps
+./patrickscript /tmp/fib.ps
+```
 
 ## Documentation conventions
 

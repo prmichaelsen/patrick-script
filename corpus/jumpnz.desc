@@ -1,0 +1,1 @@
+JUMPNZ fires when top != 0; skips PUSH 0; prints 42

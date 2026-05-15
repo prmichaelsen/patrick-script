@@ -1,0 +1,1 @@
+JUMP skips dead PUSH 0; OUTNUM prints 42, HALT

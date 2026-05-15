@@ -1,0 +1,7 @@
+; inchar: read one byte from stdin and echo it back
+; stdin: A
+; Expected output: A
+
+INCHAR         ; 0: read byte (pushes ASCII value)
+OUTCHAR        ; 1: write byte
+HALT           ; 2

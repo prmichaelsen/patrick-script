@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# <!-- @scry.entry
+# id: code.patrickscript-wrapper~b52be9d9
+# kind: code
+# status: active
+# weight: 0.7
+# tags:
+#   - "topic:patrickscript"
+#   - "topic:tooling"
+#   - "patrickscript"
+#   - "wrapper"
+#   - "shell-script"
+#   - "cli"
+# summary: >
+#   PatrickScript shell wrapper. Resolves the interpreter path relative to the
+#   script and delegates to python3 interpreter/ps.py. Supports all ps.py
+#   flags (--disassemble, etc.). Also: patrickscript CLI, shell wrapper,
+#   PatrickScript runner.
+# rationale: >
+#   Without this, running a PatrickScript program requires knowing the
+#   interpreter path. The wrapper lets users run './patrickscript prog.ps'
+#   from anywhere in the project tree.
+# applies: >
+#   running PatrickScript programs from the command line, using PatrickScript
+#   in scripts, adding PatrickScript to PATH
+# seeded_questions:
+#   - "How do I run a PatrickScript program?"
+#   - "PatrickScript command line runner"
+#   - "patrickscript wrapper"
+# @scry.entry.end -->
+# PatrickScript — shell wrapper for the reference interpreter
+# Usage: patrickscript [--disassemble] <program.ps>
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+INTERP="$SCRIPT_DIR/interpreter/ps.py"
+
+if ! command -v python3 &>/dev/null; then
+    echo "error: python3 is required to run PatrickScript" >&2
+    exit 2
+fi
+
+exec python3 "$INTERP" "$@"

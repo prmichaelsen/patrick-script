@@ -1,0 +1,1 @@
+STORE 42 at mem[7]; LOAD from mem[7]; OUTNUM prints 42

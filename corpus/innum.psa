@@ -1,0 +1,7 @@
+; innum: read an integer from stdin and echo it
+; stdin: 17
+; Expected output: 17
+
+INNUM          ; 0: read integer from stdin
+OUTNUM         ; 1: print it
+HALT           ; 2

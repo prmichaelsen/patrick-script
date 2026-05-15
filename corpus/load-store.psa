@@ -1,0 +1,10 @@
+; load-store: store 42 at address 7, load it back, print it
+; Expected output: 42
+
+PUSH 42        ; 0: value to store
+PUSH 7         ; 1: address
+STORE          ; 2: mem[7] = 42
+PUSH 7         ; 3: address to load from
+LOAD           ; 4: push mem[7] = 42
+OUTNUM         ; 5: print 42
+HALT           ; 6

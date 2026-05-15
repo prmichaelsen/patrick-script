@@ -1,0 +1,13 @@
+; jumpnz-loop: countdown from 3 to 0 using JUMPNZ
+; Expected output: 3\n2\n1\n0
+
+PUSH 3         ; 0: starting counter
+loop:
+DUP            ; 1: duplicate for printing (loop target)
+OUTNUM         ; 2: print current value
+PUSH 1         ; 3: decrement
+SUB            ; 4: n - 1
+DUP            ; 5: duplicate to test
+JUMPNZ loop    ; 6: if non-zero, loop back to 1
+OUTNUM         ; 7: print final 0
+HALT           ; 8

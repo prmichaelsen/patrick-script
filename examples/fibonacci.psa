@@ -1,0 +1,60 @@
+; fibonacci.psa — print the first 10 Fibonacci numbers (0,1,1,2,3,5,8,13,21,34)
+;
+; Memory layout:
+;   mem[0] = a   (current Fibonacci value, starts at 0)
+;   mem[1] = b   (next Fibonacci value, starts at 1)
+;   mem[2] = n   (remaining iterations, starts at 10)
+;
+; Each iteration:
+;   print a
+;   new_a = b
+;   new_b = a + b
+;   n--
+;   if n > 0: loop
+
+; --- Initialise ---
+PUSH 0         ; value a = 0
+PUSH 0         ; address 0
+STORE          ; mem[0] = 0
+
+PUSH 1         ; value b = 1
+PUSH 1         ; address 1
+STORE          ; mem[1] = 1
+
+PUSH 10        ; count = 10
+PUSH 2         ; address 2
+STORE          ; mem[2] = 10
+
+; --- Loop (instruction index 9) ---
+loop:
+PUSH 0
+LOAD           ; push a
+OUTNUM         ; print a
+
+; Load a and b to compute updates
+PUSH 0
+LOAD           ; push a
+PUSH 1
+LOAD           ; push b; stack: [a, b]
+
+; new_a = b: duplicate b, store to addr 0
+DUP            ; [a, b, b]
+PUSH 0         ; [a, b, b, 0]
+STORE          ; mem[0] = b; stack: [a, b]
+
+; new_b = a + b: add remaining a and b
+ADD            ; [a+b]
+PUSH 1         ; [a+b, 1]
+STORE          ; mem[1] = a+b; stack: []
+
+; Decrement counter
+PUSH 2
+LOAD           ; [count]
+PUSH 1
+SUB            ; [count - 1]
+DUP            ; [count-1, count-1]
+PUSH 2         ; [count-1, count-1, 2]
+STORE          ; mem[2] = count-1; stack: [count-1]
+JUMPNZ loop    ; if count-1 != 0, loop back
+
+HALT

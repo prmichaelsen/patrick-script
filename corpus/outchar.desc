@@ -1,0 +1,1 @@
+PUSH 72 ('H') then OUTCHAR → writes byte 'H' to stdout

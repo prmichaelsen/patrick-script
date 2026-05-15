@@ -1,0 +1,6 @@
+; outchar: push ASCII 72 ('H') and write byte to stdout
+; Expected output: H  (no newline)
+
+PUSH 72        ; 0: ASCII code for 'H'
+OUTCHAR        ; 1: write byte
+HALT           ; 2

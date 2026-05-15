@@ -1,0 +1,16 @@
+; echo.psa — copy stdin to stdout byte by byte; halt on EOF
+;
+; Read bytes until EOF (-1), write each to stdout.
+; INCHAR returns -1 on EOF; we detect this by adding 1 and testing for zero.
+
+loop:
+INCHAR         ; 0: read byte (or -1 on EOF)
+DUP            ; 1: duplicate to test for EOF
+PUSH 1         ; 2
+ADD            ; 3: if was -1, result is 0
+JUMPZ done     ; 4: if zero (EOF), jump to done
+OUTCHAR        ; 5: write byte
+JUMP loop      ; 6: loop back to 0
+done:
+POP            ; 7: discard the sentinel -1 still on stack
+HALT           ; 8

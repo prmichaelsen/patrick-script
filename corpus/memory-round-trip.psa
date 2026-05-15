@@ -1,0 +1,11 @@
+; memory-round-trip: store 42 at address 0, load it back, print
+; Tests STORE and LOAD instructions
+; Expected output: 42
+
+PUSH 42        ; 0: value to store
+PUSH 0         ; 1: address
+STORE          ; 2: mem[0] = 42
+PUSH 0         ; 3: address to read from
+LOAD           ; 4: push mem[0]
+OUTNUM         ; 5: prints 42
+HALT           ; 6

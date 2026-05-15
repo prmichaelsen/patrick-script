@@ -1,0 +1,9 @@
+; jump: unconditional JUMP skips dead code
+; Expected output: 42
+
+PUSH 42        ; 0
+JUMP done      ; 1: skip idx 2
+PUSH 0         ; 2: dead code — never reached
+done:
+OUTNUM         ; 3
+HALT           ; 4
