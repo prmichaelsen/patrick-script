@@ -1,0 +1,6 @@
+# ACP project-link marker — machine-local linking state, not part of the language
+agent/
+
+# Python
+__pycache__/
+*.pyc
