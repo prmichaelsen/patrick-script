@@ -1,0 +1,1 @@
+PUSH 1, PUSH 2, SWAP → [2,1] top=1, OUTNUM prints 1

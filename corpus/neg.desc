@@ -1,0 +1,1 @@
+PUSH 5, NEG → -5, OUTNUM, HALT

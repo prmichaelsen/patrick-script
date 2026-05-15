@@ -1,0 +1,1 @@
+PUSH 42, OUTNUM, HALT → prints 42

@@ -1,0 +1,1 @@
+PUSH 7, DUP, OUTNUM (prints dup), POP (discard orig), HALT
