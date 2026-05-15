@@ -194,6 +194,11 @@ All arithmetic pops two values unless noted. The operand order is: pop b
 | 3     | 4       | MOD      | a b → a mod b | Integer remainder (sign follows a)    |
 | 3     | 5       | NEG      | a → -a        | Negate (unary; pops one, not two)     |
 
+**Negative integer literals**: PUSH encodes its argument as `gap_arg`,
+which is always ≥ 0. There is no literal syntax for negative integers.
+To push −n, push n then negate: `PUSH n` followed by `NEG`. The result
+is −n on the stack. The assembler supports this directly via two lines.
+
 **Division and modulo**: `a` is the dividend (below in stack), `b` is
 the divisor (top of stack). `DIV` computes `floor(a / b)`. `MOD`
 computes `a - b * floor(a / b)`. Division by zero is a runtime error.
