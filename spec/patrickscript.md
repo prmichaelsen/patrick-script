@@ -77,10 +77,10 @@ all meaning.
 A PatrickScript source file is a sequence of bytes drawn exclusively from
 two token types:
 
-| Token | Representation | Unicode |
-|-------|---------------|---------|
-| WORD  | The string `patrick` | 7 ASCII bytes |
-| SP    | A single space character | U+0020 |
+| Token | Representation           | Unicode       |
+| ----- | ------------------------ | ------------- |
+| WORD  | The string `patrick`     | 7 ASCII bytes |
+| SP    | A single space character | U+0020        |
 
 No other bytes are legal in a PatrickScript source. Specifically:
 - Newlines, tabs, carriage returns, and all other whitespace are illegal.
@@ -171,27 +171,27 @@ immediate integer argument).
 
 ### 5.1 Stack Manipulation
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 1 | n | PUSH | → n | Push the integer n onto the stack |
-| 2 | 0 | POP | a → | Discard the top of the stack |
-| 2 | 1 | DUP | a → a a | Duplicate the top of the stack |
-| 2 | 2 | SWAP | a b → b a | Swap the top two elements |
-| 2 | 3 | ROT | a b c → b c a | Rotate: move third element to top |
+| Arity | gap_arg | Mnemonic | Stack effect  | Description                       |
+| ----- | ------- | -------- | ------------- | --------------------------------- |
+| 1     | n       | PUSH     | → n           | Push the integer n onto the stack |
+| 2     | 0       | POP      | a →           | Discard the top of the stack      |
+| 2     | 1       | DUP      | a → a a       | Duplicate the top of the stack    |
+| 2     | 2       | SWAP     | a b → b a     | Swap the top two elements         |
+| 2     | 3       | ROT      | a b c → b c a | Rotate: move third element to top |
 
 ### 5.2 Arithmetic
 
 All arithmetic pops two values unless noted. The operand order is: pop b
 (top), pop a (below), compute and push result.
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 3 | 0 | ADD | a b → a+b | Integer addition |
-| 3 | 1 | SUB | a b → a-b | Integer subtraction (a minus b) |
-| 3 | 2 | MUL | a b → a*b | Integer multiplication |
-| 3 | 3 | DIV | a b → a÷b | Integer division (floor), b divides a |
-| 3 | 4 | MOD | a b → a mod b | Integer remainder (sign follows a) |
-| 3 | 5 | NEG | a → -a | Negate (unary; pops one, not two) |
+| Arity | gap_arg | Mnemonic | Stack effect  | Description                           |
+| ----- | ------- | -------- | ------------- | ------------------------------------- |
+| 3     | 0       | ADD      | a b → a+b     | Integer addition                      |
+| 3     | 1       | SUB      | a b → a-b     | Integer subtraction (a minus b)       |
+| 3     | 2       | MUL      | a b → a*b     | Integer multiplication                |
+| 3     | 3       | DIV      | a b → a÷b     | Integer division (floor), b divides a |
+| 3     | 4       | MOD      | a b → a mod b | Integer remainder (sign follows a)    |
+| 3     | 5       | NEG      | a → -a        | Negate (unary; pops one, not two)     |
 
 **Division and modulo**: `a` is the dividend (below in stack), `b` is
 the divisor (top of stack). `DIV` computes `floor(a / b)`. `MOD`
@@ -199,25 +199,25 @@ computes `a - b * floor(a / b)`. Division by zero is a runtime error.
 
 ### 5.3 Comparison
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 4 | 0 | EQ | a b → (a==b) | 1 if equal, 0 otherwise |
-| 4 | 1 | LT | a b → (a<b) | 1 if a < b, 0 otherwise |
-| 4 | 2 | GT | a b → (a>b) | 1 if a > b, 0 otherwise |
-| 4 | 3 | AND | a b → a&b | Bitwise AND |
-| 4 | 4 | OR | a b → a\|b | Bitwise OR |
-| 4 | 5 | XOR | a b → a^b | Bitwise XOR |
-| 4 | 6 | NOT | a → ~a | Bitwise NOT (ones' complement) |
+| Arity | gap_arg | Mnemonic | Stack effect | Description                    |
+| ----- | ------- | -------- | ------------ | ------------------------------ |
+| 4     | 0       | EQ       | a b → (a==b) | 1 if equal, 0 otherwise        |
+| 4     | 1       | LT       | a b → (a<b)  | 1 if a < b, 0 otherwise        |
+| 4     | 2       | GT       | a b → (a>b)  | 1 if a > b, 0 otherwise        |
+| 4     | 3       | AND      | a b → a&b    | Bitwise AND                    |
+| 4     | 4       | OR       | a b → a\|b   | Bitwise OR                     |
+| 4     | 5       | XOR      | a b → a^b    | Bitwise XOR                    |
+| 4     | 6       | NOT      | a → ~a       | Bitwise NOT (ones' complement) |
 
 Comparison operand order: pop b (top), pop a (below), push result.
 
 ### 5.4 Control Flow
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 5 | n | JUMP | — | Set IP to n (unconditional) |
-| 6 | n | JUMPZ | a → | Pop a; if a == 0, set IP to n |
-| 7 | n | JUMPNZ | a → | Pop a; if a != 0, set IP to n |
+| Arity | gap_arg | Mnemonic | Stack effect | Description                   |
+| ----- | ------- | -------- | ------------ | ----------------------------- |
+| 5     | n       | JUMP     | —            | Set IP to n (unconditional)   |
+| 6     | n       | JUMPZ    | a →          | Pop a; if a == 0, set IP to n |
+| 7     | n       | JUMPNZ   | a →          | Pop a; if a != 0, set IP to n |
 
 JUMP and JUMPZ set the IP to the instruction at 0-based index n. After
 a jump, execution continues from the new IP (no automatic increment for
@@ -228,25 +228,25 @@ branch is taken.
 
 ### 5.5 Input / Output
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 8 | 0 | INCHAR | → c | Read one byte from stdin; push its value (0–255). Push -1 on EOF. |
-| 8 | 1 | OUTCHAR | c → | Pop c; write `c mod 256` as one byte to stdout |
-| 8 | 2 | INNUM | → n | Read one decimal integer from stdin (leading whitespace ignored); push n. Push -1 on EOF or parse error. |
-| 8 | 3 | OUTNUM | n → | Pop n; write the decimal representation of n to stdout, followed by a newline |
+| Arity | gap_arg | Mnemonic | Stack effect | Description                                                                                              |
+| ----- | ------- | -------- | ------------ | -------------------------------------------------------------------------------------------------------- |
+| 8     | 0       | INCHAR   | → c          | Read one byte from stdin; push its value (0–255). Push -1 on EOF.                                        |
+| 8     | 1       | OUTCHAR  | c →          | Pop c; write `c mod 256` as one byte to stdout                                                           |
+| 8     | 2       | INNUM    | → n          | Read one decimal integer from stdin (leading whitespace ignored); push n. Push -1 on EOF or parse error. |
+| 8     | 3       | OUTNUM   | n →          | Pop n; write the decimal representation of n to stdout, followed by a newline                            |
 
 ### 5.6 Memory
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 9 | 0 | LOAD | addr → val | Pop addr; push M[addr] |
-| 9 | 1 | STORE | val addr → | Pop addr; pop val; set M[addr] = val |
+| Arity | gap_arg | Mnemonic | Stack effect | Description                          |
+| ----- | ------- | -------- | ------------ | ------------------------------------ |
+| 9     | 0       | LOAD     | addr → val   | Pop addr; push M[addr]               |
+| 9     | 1       | STORE    | val addr →   | Pop addr; pop val; set M[addr] = val |
 
 ### 5.7 Halt
 
-| Arity | gap_arg | Mnemonic | Stack effect | Description |
-|-------|---------|----------|-------------|-------------|
-| 10 | any | HALT | — | Terminate the program with exit code 0 |
+| Arity | gap_arg | Mnemonic | Stack effect | Description                            |
+| ----- | ------- | -------- | ------------ | -------------------------------------- |
+| 10    | any     | HALT     | —            | Terminate the program with exit code 0 |
 
 ### 5.8 Reserved and Illegal Instructions
 
@@ -264,12 +264,12 @@ The following conditions are runtime errors. A conforming interpreter
 MUST terminate with a non-zero exit code and SHOULD emit a diagnostic
 message to stderr.
 
-| Condition | Example |
-|-----------|---------|
-| Stack underflow | POP on empty stack |
-| Division by zero | DIV or MOD with 0 on top |
-| Jump out of bounds | JUMP n where n ≥ program length |
-| Illegal instruction | word arity ≥ 11 |
+| Condition                  | Example                                         |
+| -------------------------- | ----------------------------------------------- |
+| Stack underflow            | POP on empty stack                              |
+| Division by zero           | DIV or MOD with 0 on top                        |
+| Jump out of bounds         | JUMP n where n ≥ program length                 |
+| Illegal instruction        | word arity ≥ 11                                 |
 | Illegal gap_arg for opcode | gap_arg outside defined range for a given arity |
 
 For arity 2, gap_arg values 4 and above are illegal.
@@ -306,21 +306,21 @@ immediately after the last `patrick` of the word.
 Below, `p` stands for `patrick` (7 characters) and `·` for a space:
 
 | Instruction | Arity | gap_arg | Source (p=`patrick`, ·=space) |
-|-------------|-------|---------|-------------------------------|
-| PUSH 0 | 1 | 0 | `p·` |
-| PUSH 5 | 1 | 5 | `p······` |
-| POP | 2 | 0 | `pp·` |
-| DUP | 2 | 1 | `pp··` |
-| SWAP | 2 | 2 | `pp···` |
-| ADD | 3 | 0 | `ppp·` |
-| SUB | 3 | 1 | `ppp··` |
-| EQ | 4 | 0 | `pppp·` |
-| JUMP 0 | 5 | 0 | `ppppp·` |
-| JUMPZ 3 | 6 | 3 | `pppppp····` |
-| INCHAR | 8 | 0 | `pppppppp·` |
-| OUTCHAR | 8 | 1 | `pppppppp··` |
-| LOAD | 9 | 0 | `ppppppppp·` |
-| HALT | 10 | 0 | `pppppppppp` |
+| ----------- | ----- | ------- | ----------------------------- |
+| PUSH 0      | 1     | 0       | `p·`                          |
+| PUSH 5      | 1     | 5       | `p······`                     |
+| POP         | 2     | 0       | `pp·`                         |
+| DUP         | 2     | 1       | `pp··`                        |
+| SWAP        | 2     | 2       | `pp···`                       |
+| ADD         | 3     | 0       | `ppp·`                        |
+| SUB         | 3     | 1       | `ppp··`                       |
+| EQ          | 4     | 0       | `pppp·`                       |
+| JUMP 0      | 5     | 0       | `ppppp·`                      |
+| JUMPZ 3     | 6     | 3       | `pppppp····`                  |
+| INCHAR      | 8     | 0       | `pppppppp·`                   |
+| OUTCHAR     | 8     | 1       | `pppppppp··`                  |
+| LOAD        | 9     | 0       | `ppppppppp·`                  |
+| HALT        | 10    | 0       | `pppppppppp`                  |
 
 A concrete example: OUTCHAR followed by HALT is the byte sequence
 `patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick`

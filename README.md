@@ -12,3 +12,10 @@ substrate. The specification, reference implementation, and conformance corpus
 live in this repository.
 
 Status: bootstrapping — the spec is being authored on the track's first wakes.
+
+## Documentation conventions
+
+**Raw-legible tables**: every markdown table in every `*.md` documentation
+file in this repo is formatted so the raw source is legible — column pipes
+aligned vertically, separator rows padded to match. Pure presentation; content
+is never changed to satisfy alignment. Apply this to any table you add or edit.
