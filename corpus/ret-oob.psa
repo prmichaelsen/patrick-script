@@ -1,0 +1,4 @@
+; ret-oob: RET with invalid return address on stack
+; Pushes 99 as a bogus return address (program has 2 instructions).
+PUSH 99
+RET

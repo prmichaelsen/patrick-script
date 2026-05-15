@@ -1,0 +1,1 @@
+PICK n > 0 accesses elements below top without consuming them; verifies depth semantics

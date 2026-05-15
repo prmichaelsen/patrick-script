@@ -117,10 +117,11 @@ MNEMONIC_TABLE: dict[str, tuple[int, int | None]] = {
     "CALL":    (11, None),
     "RET":     (12, 0),
     "PUSHN":   (13, None),
+    "PICK":    (14, None),
 }
 
 # Mnemonics that take a numeric/label argument
-TAKES_ARG = {"PUSH", "PUSHN", "JUMP", "JUMPZ", "JUMPNZ", "CALL"}
+TAKES_ARG = {"PUSH", "PUSHN", "JUMP", "JUMPZ", "JUMPNZ", "CALL", "PICK"}
 
 
 def _asm_error(line_no: int, line: str, msg: str) -> None:

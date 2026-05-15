@@ -33,7 +33,7 @@
 #   - "reference implementation PatrickScript"
 # @scry.entry.end -->
 """
-PatrickScript v1.2.0 reference interpreter.
+PatrickScript v1.3.0 reference interpreter.
 
 Usage:
     python ps.py <program.ps>
@@ -146,6 +146,7 @@ MNEMONICS = {
     (11, None): ("CALL n", "push return addr; jump to n"),
     (12, None): ("RET", "pop return addr; jump there"),
     (13, None): ("PUSHN n", "push -n (negative immediate)"),
+    (14, None): ("PICK n", "copy n-th element from top"),
 }
 
 
@@ -351,11 +352,20 @@ def execute(instructions: list[tuple[int, int]]) -> None:
         elif arity == 13:
             stack.append(-gap_arg)
 
+        # --- Arity 14: PICK (v1.3.0) ---
+        elif arity == 14:
+            depth = len(stack)
+            if gap_arg >= depth:
+                _runtime_error(
+                    f"PICK {gap_arg}: stack underflow (depth={depth})"
+                )
+            stack.append(stack[-(gap_arg + 1)])
+
         # --- Illegal ---
         else:
             _runtime_error(
                 f"illegal instruction arity {arity} at instruction {ip-1} "
-                f"(arities 14+ are reserved)"
+                f"(arities 15+ are reserved)"
             )
 
     # Fell off end of program — implicit halt

@@ -1,0 +1,4 @@
+   0  PICK 0            ; copy n-th element from top
+   1  PICK 1            ; copy n-th element from top
+   2  PICK 3            ; copy n-th element from top
+   3  HALT              ; terminate

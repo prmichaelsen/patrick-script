@@ -1,0 +1,1 @@
+Arity-2 instruction with illegal gap_arg=4 triggers runtime error (exit 1); stdout is empty

@@ -1,0 +1,1 @@
+RET with negative return address on stack triggers runtime error; stdout is empty

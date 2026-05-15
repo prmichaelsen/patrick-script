@@ -1,0 +1,16 @@
+; PICK n where n > 0: access elements below top
+; Push 10, 20, 30 (30 on top)
+; PICK 2 copies 10 (deepest); OUTNUM → 10
+; PICK 1 copies 20; OUTNUM → 20
+; original stack intact; OUTNUM OUTNUM OUTNUM → 30 20 10
+PUSH 10
+PUSH 20
+PUSH 30
+PICK 2
+OUTNUM
+PICK 1
+OUTNUM
+OUTNUM
+OUTNUM
+OUTNUM
+HALT

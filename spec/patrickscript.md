@@ -14,16 +14,16 @@ tags:
   - "unary-encoding"
   - "turing-complete"
 summary: >
-  PatrickScript v1.2.0 — a Turing-complete stack-based language with exactly
+  PatrickScript v1.3.0 — a Turing-complete stack-based language with exactly
   two lexical tokens: the word `patrick` and a single space. Word arity (count
   of consecutive `patrick` tokens) selects the opcode family; gap width (count
   of consecutive spaces) encodes the immediate argument. The machine has a value
   stack, integer-addressed memory, byte-width I/O, subroutine support via
-  CALL/RET (v1.1.0), and single-instruction negative literal PUSHN (v1.2.0).
-  Designed and owned by the patrick-script-worker track.
+  CALL/RET (v1.1.0), single-instruction negative literal PUSHN (v1.2.0), and
+  stack copy PICK (v1.3.0). Designed and owned by the patrick-script-worker track.
   Also: PatrickScript, two-token language, unary encoding, opcode-by-count,
   gap-encodes-arg, stack machine, esolang, Turing complete, reference spec,
-  v1.2.0, CALL, RET, subroutines, PUSHN, negative literal.
+  v1.3.0, CALL, RET, subroutines, PUSHN, negative literal, PICK, stack copy.
 rationale: >
   Without this spec, no implementation is correct by definition. Every design
   decision about PatrickScript lives here. An implementation written without
@@ -47,7 +47,7 @@ seeded_questions:
 
 # PatrickScript Language Specification
 
-**Version**: 1.2.0
+**Version**: 1.3.0
 **Status**: active
 **Authored by**: patrick-script-worker track, 2026-05-15
 
@@ -294,10 +294,31 @@ Examples: `PUSHN 5` pushes −5. `PUSHN 0` pushes 0 (same as `PUSH 0`).
 The two-instruction idiom `PUSH n / NEG` remains valid and equivalent.
 PUSHN is a convenience instruction, not a new capability.
 
-### 5.10 Reserved and Illegal Instructions
+### 5.10 Stack Copy (v1.3.0)
 
-Arities 14 and above are reserved for future versions. An instruction
-with arity ≥ 14 is a runtime error in v1.2.0.
+| Arity | gap_arg | Mnemonic | Stack effect                  | Description                             |
+| ----- | ------- | -------- | ----------------------------- | --------------------------------------- |
+| 14    | n       | PICK     | a[n]..a[1] a[0] → ... a[0] a[n] | Copy the element n positions from top |
+
+**PICK n** copies the element at depth n (0-indexed from the top of the
+stack) and pushes it onto the top. The original element is not removed.
+
+- `PICK 0` duplicates the top element (equivalent to DUP).
+- `PICK 1` copies the second element from the top.
+- `PICK n` where n ≥ stack depth is a stack underflow runtime error.
+
+PICK is useful for accessing subroutine arguments buried below return
+addresses, and for implementing n-ary operations that need a value
+without consuming it.
+
+Examples:
+- Stack `[1 2 3]` (3 on top): `PICK 0` → `[1 2 3 3]`
+- Stack `[1 2 3]`: `PICK 2` → `[1 2 3 1]`
+
+### 5.11 Reserved and Illegal Instructions
+
+Arities 15 and above are reserved for future versions. An instruction
+with arity ≥ 15 is a runtime error in v1.3.0.
 
 There is no instruction with arity 0 (a zero-length word is not
 grammatically possible).
@@ -312,10 +333,10 @@ message to stderr.
 
 | Condition                  | Example                                         |
 | -------------------------- | ----------------------------------------------- |
-| Stack underflow            | POP on empty stack                              |
+| Stack underflow            | POP on empty stack; PICK n where n ≥ depth      |
 | Division by zero           | DIV or MOD with 0 on top                        |
 | Jump out of bounds         | JUMP n where n ≥ program length                 |
-| Illegal instruction        | word arity ≥ 14                                 |
+| Illegal instruction        | word arity ≥ 15                                 |
 | Illegal gap_arg for opcode | gap_arg outside defined range for a given arity |
 
 For arity 2, gap_arg values 4 and above are illegal.
@@ -328,6 +349,8 @@ For arity 10 (HALT), all gap_arg values are legal.
 For arity 11 (CALL), any gap_arg is legal (it is the target address).
 For arity 12 (RET), all gap_arg values are legal (the gap_arg is ignored).
 For arity 13 (PUSHN), any gap_arg is legal (it is the value to negate).
+For arity 14 (PICK), any gap_arg is legal (it is the stack depth index),
+  but a PICK n where n ≥ stack depth is a stack underflow runtime error.
 
 **Lexical errors** (illegal characters in source) are parse-time errors
 and MUST cause the interpreter to exit with a non-zero exit code before
@@ -373,6 +396,7 @@ Below, `p` stands for `patrick` (7 characters) and `·` for a space:
 | CALL 3      | 11    | 3       | `ppppppppppp····`             |
 | RET         | 12    | 0       | `pppppppppppp·`               |
 | PUSHN 5     | 13    | 5       | `ppppppppppppp······`         |
+| PICK 2      | 14    | 2       | `pppppppppppppp···`           |
 
 A concrete example: OUTCHAR followed by HALT is the byte sequence
 `patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick`
@@ -609,6 +633,36 @@ stack with the result(s) below it. Violations (wrong stack depth, wrong
 top-of-stack) cause jump-out-of-bounds or return to a garbage address.
 The assembler's label system makes CALL targets readable, but the stack
 discipline at RET is the programmer's responsibility.
+
+### 9.7 Zero-Argument Subroutine Reuse
+
+A zero-argument subroutine is the simplest reusable unit: no arguments
+to SWAP around, no result to thread through the stack frame. Because the
+return address arrives on top, the subroutine executes, then RETs
+without any frame-management overhead.
+
+```
+print_hello:
+  .string "Hi\n"   ;; output-only side effect
+  RET               ;; return address already on top
+```
+
+The same subroutine can be called any number of times:
+
+```
+CALL print_hello   ;; first call
+CALL print_hello   ;; second call — same body, new return address
+HALT
+```
+
+Each CALL pushes a fresh return address, so independent invocations
+share the body code but maintain separate return continuations. There
+is no state to reset between calls; zero-argument subroutines are
+naturally reentrant in a single-threaded sequential program.
+
+This pattern suits output routines, print helpers, and repeated
+fixed-work blocks. The `corpus/call-string.psa` test demonstrates
+it: `.string "Hi\n"` + `RET`, called twice.
 
 ---
 

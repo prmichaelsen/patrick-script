@@ -1,0 +1,1 @@
+PICK 0 copies the top of the stack (same as DUP); verifies PICK 0 semantics

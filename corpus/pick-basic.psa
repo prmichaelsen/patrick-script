@@ -1,0 +1,7 @@
+; PICK 0 = DUP of top
+; Push 42, PICK 0 → stack [42 42], OUTNUM twice → prints 42\n42\n, HALT
+PUSH 42
+PICK 0
+OUTNUM
+OUTNUM
+HALT

@@ -1,0 +1,6 @@
+; ret-invalid: RET with a negative return address triggers runtime error
+; PUSHN 1 pushes -1; RET pops -1 as the return address; -1 < 0 → error
+; Expected output: (empty — error on stderr, exit 1)
+
+PUSHN 1    ; 0: push -1
+RET        ; 1: pop -1 → ret_addr < 0 → runtime error

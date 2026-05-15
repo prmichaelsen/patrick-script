@@ -1,0 +1,2 @@
+; illegal-gap2 is raw .ps — no psa, gap_arg=4 is not a valid mnemonic
+; See illegal-gap2.ps for the raw source
