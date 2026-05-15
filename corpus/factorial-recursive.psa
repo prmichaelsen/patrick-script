@@ -1,0 +1,39 @@
+; Recursive factorial in PatrickScript v1.1.0
+; Demonstrates: CALL/RET, recursion, stack-based calling convention
+;
+; Calling convention for `factorial`:
+;   Caller pushes n, then CALL factorial.
+;   CALL pushes return address on top.
+;   On entry: stack = [..., n, ret_addr]  (ret_addr on top)
+;   On return: result is on top, ret_addr consumed by RET.
+;
+; Computes 5! = 120
+
+PUSH 5
+CALL factorial
+OUTNUM
+HALT
+
+factorial:
+  ; Stack on entry: [..., n, ret_addr]
+  SWAP           ; [..., ret_addr, n]
+  DUP            ; [..., ret_addr, n, n]
+  PUSH 1
+  GT             ; [..., ret_addr, n, (n>1)]
+  JUMPZ fac_base ; n <= 1: return 1
+
+  ; Recursive case: return n * factorial(n-1)
+  DUP            ; [..., ret_addr, n, n]
+  PUSH 1
+  SUB            ; [..., ret_addr, n, n-1]
+  CALL factorial ; [..., ret_addr, n, factorial(n-1)]
+  MUL            ; [..., ret_addr, n!]
+  SWAP           ; [..., n!, ret_addr]
+  RET
+
+fac_base:
+  ; n <= 1: discard n, return 1
+  POP            ; [..., ret_addr]
+  PUSH 1         ; [..., ret_addr, 1]
+  SWAP           ; [..., 1, ret_addr]
+  RET

@@ -11,7 +11,7 @@ The language is owned by the `patrick-script-worker` track in the `reflection`
 substrate. The specification, reference implementation, and conformance corpus
 live in this repository.
 
-Status: v1.1.0 — spec, reference interpreter, assembler, and 38-test
+Status: v1.1.0 — spec, reference interpreter, assembler, and 39-test
 conformance corpus complete. Turing complete via JUMP/JUMPZ/JUMPNZ +
 unbounded memory. v1.1.0 adds CALL/RET subroutines (arities 11–12).
 
@@ -34,7 +34,7 @@ python3 interpreter/ps.py <program.ps>
 bash corpus/run-tests.sh
 ```
 
-All 38 tests should pass.
+All 39 tests should pass.
 
 ## Writing programs with the assembler
 
@@ -65,6 +65,7 @@ for complete programs.
 - `counter.psa` — infinite counter (0, 1, 2, ...)
 - `echo.psa` — copy stdin to stdout byte by byte
 - `fibonacci.psa` — first 10 Fibonacci numbers
+- `factorial-recursive.psa` — recursive 5! using CALL/RET; shows nested recursion (v1.1.0)
 - `fizzbuzz.psa` — FizzBuzz 1..15 using CALL/RET subroutines + `.string` (v1.1.0)
 
 To run an example:
