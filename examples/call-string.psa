@@ -1,0 +1,13 @@
+; call-string.psa — CALL/RET with .string in a subroutine (v1.1.0)
+; Calls the print_hello subroutine twice, each invocation printing "Hi"
+; followed by a newline. Demonstrates:
+;   1. .string directive works inside subroutines
+;   2. CALL/RET returns correctly after subroutine body completes
+;   3. The same subroutine can be called multiple times (natural reentrancy)
+CALL print_hello
+CALL print_hello
+HALT
+
+print_hello:
+  .string "Hi\n"
+  RET

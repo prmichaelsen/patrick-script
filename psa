@@ -37,7 +37,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ASM="$SCRIPT_DIR/interpreter/psa.py"
+ASM="$SCRIPT_DIR/src/patrickscript/psa.py"
 
 if ! command -v python3 &>/dev/null; then
     echo "error: python3 is required to run the PatrickScript assembler" >&2

@@ -4,7 +4,7 @@
 # Runs --disassemble on all .ps files in corpus/disasm/ and checks output.
 set -euo pipefail
 
-INTERP="$(dirname "$0")/../interpreter/ps.py"
+INTERP="$(dirname "$0")/../src/patrickscript/ps.py"
 DISASM_DIR="$(dirname "$0")/disasm"
 PASS=0
 FAIL=0

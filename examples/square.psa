@@ -1,0 +1,11 @@
+; square.psa — compute n² using PICK 0 (non-destructive stack copy, v1.3.0)
+; Reads a number from stdin, prints n * n followed by a newline.
+; PICK 0 copies the top of stack without consuming it — equivalent to DUP,
+; but showing the PICK idiom for non-destructive reuse of a stack value.
+INNUM        ; read n → [n]
+PICK 0       ; copy top: [n, n]
+MUL          ; [n²]
+OUTNUM       ; print n²
+PUSH 10
+OUTCHAR      ; newline
+HALT

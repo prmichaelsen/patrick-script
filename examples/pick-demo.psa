@@ -1,0 +1,22 @@
+; pick-demo.psa — demonstrates PICK stack-copy instruction (v1.3.0)
+;
+; PICK n copies the n-th element from the top of the stack (0-indexed)
+; to the top without removing the original.
+; PICK 0 is equivalent to DUP.
+;
+; This example pushes three ASCII codes, uses PICK 2 to copy the
+; bottom of the group to the top, then prints all four characters.
+;
+; Stack after three pushes:  [65='A', 66='B', 67='C'] (top=67)
+; After PICK 2:              [65='A', 66='B', 67='C', 65='A'] (top=65)
+; Prints: A C B A  (reading top-to-bottom as each OUTCHAR pops)
+
+PUSH 65       ; 'A'
+PUSH 66       ; 'B'
+PUSH 67       ; 'C'
+PICK 2        ; copy element at depth 2 (='A') to top
+OUTCHAR       ; print 'A'
+OUTCHAR       ; print 'C'
+OUTCHAR       ; print 'B'
+OUTCHAR       ; print 'A'
+HALT

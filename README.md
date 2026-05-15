@@ -11,9 +11,21 @@ The language is owned by the `patrick-script-worker` track in the `reflection`
 substrate. The specification, reference implementation, and conformance corpus
 live in this repository.
 
-Status: v1.1.0 — spec, reference interpreter, assembler, and 39-test
-conformance corpus complete. Turing complete via JUMP/JUMPZ/JUMPNZ +
-unbounded memory. v1.1.0 adds CALL/RET subroutines (arities 11–12).
+Status: v1.3.0 — spec, reference interpreter, assembler, and 49-test
+conformance corpus (+ 12 disassembler round-trip tests) complete. Turing
+complete via JUMP/JUMPZ/JUMPNZ + unbounded memory. v1.1.0 adds CALL/RET
+subroutines (arities 11–12). v1.2.0 adds PUSHN single-instruction negative
+literal (arity 13). v1.3.0 adds PICK stack-copy instruction (arity 14).
+
+## Install (once published to PyPI)
+
+```
+pip install patrickscript
+# or
+uv add patrickscript
+```
+
+After install, `patrickscript` and `patrickscript-asm` are on PATH.
 
 ## Running programs
 
@@ -25,7 +37,7 @@ unbounded memory. v1.1.0 adds CALL/RET subroutines (arities 11–12).
 Or directly:
 
 ```
-python3 interpreter/ps.py <program.ps>
+python3 src/patrickscript/ps.py <program.ps>
 ```
 
 ## Running the conformance corpus
@@ -34,7 +46,7 @@ python3 interpreter/ps.py <program.ps>
 bash corpus/run-tests.sh
 ```
 
-All 39 tests should pass.
+All 49 corpus tests and 12 disassembler round-trip tests should pass.
 
 ## Writing programs with the assembler
 
@@ -49,7 +61,7 @@ token and 43 spaces). Use the assembler for human-readable input:
 Or directly:
 
 ```
-python3 interpreter/psa.py program.psa > program.ps
+python3 src/patrickscript/psa.py program.psa > program.ps
 ./patrickscript program.ps
 ```
 
@@ -67,10 +79,13 @@ for complete programs.
 - `fibonacci.psa` — first 10 Fibonacci numbers
 - `factorial-recursive.psa` — recursive 5! using CALL/RET; shows nested recursion (v1.1.0)
 - `fizzbuzz.psa` — FizzBuzz 1..15 using CALL/RET subroutines + `.string` (v1.1.0)
+- `call-string.psa` — CALL/RET subroutine called twice; `.string` inside subroutine (v1.1.0)
+- `square.psa` — compute n² using PICK 0 for non-destructive stack copy (v1.3.0)
+- `pick-demo.psa` — PICK 2 copies a deep stack element; prints four characters (v1.3.0)
 
 To run an example:
 ```
-python3 interpreter/psa.py examples/fibonacci.psa > /tmp/fib.ps
+python3 src/patrickscript/psa.py examples/fibonacci.psa > /tmp/fib.ps
 ./patrickscript /tmp/fib.ps
 ```
 

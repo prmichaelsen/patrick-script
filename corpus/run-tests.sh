@@ -4,7 +4,7 @@
 # Runs all .ps files in corpus/ against expected output.
 set -euo pipefail
 
-INTERP="$(dirname "$0")/../interpreter/ps.py"
+INTERP="$(dirname "$0")/../src/patrickscript/ps.py"
 CORPUS="$(dirname "$0")"
 PASS=0
 FAIL=0
