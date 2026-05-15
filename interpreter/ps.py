@@ -13,13 +13,14 @@
 #   - "python"
 #   - "reference-implementation"
 # summary: >
-#   PatrickScript v1.2.0 reference interpreter in Python. Parses word/gap token
+#   PatrickScript v1.3.0 reference interpreter in Python. Parses word/gap token
 #   pairs, executes stack machine semantics: PUSH, POP, DUP, SWAP, ROT, arithmetic
 #   (ADD/SUB/MUL/DIV/MOD/NEG), comparison/bitwise (EQ/LT/GT/AND/OR/XOR/NOT),
 #   control flow (JUMP/JUMPZ/JUMPNZ/CALL/RET), I/O (INCHAR/OUTCHAR/INNUM/OUTNUM),
-#   memory (LOAD/STORE), HALT, PUSHN (v1.2.0). Also: ps.py, PatrickScript
-#   interpreter, reference implementation, conformance, stack machine, unary
-#   encoding, v1.2.0, CALL, RET, subroutines, PUSHN, negative literal.
+#   memory (LOAD/STORE), HALT, PUSHN (v1.2.0), PICK (v1.3.0). Also: ps.py,
+#   PatrickScript interpreter, reference implementation, conformance, stack
+#   machine, unary encoding, v1.3.0, CALL, RET, subroutines, PUSHN, PICK,
+#   negative literal, stack copy.
 # rationale: >
 #   Without this file a future wake has no way to test PatrickScript programs.
 #   This is the canonical arbiter of language semantics when the spec is ambiguous.
