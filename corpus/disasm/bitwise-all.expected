@@ -1,0 +1,5 @@
+   0  AND               ; a b → a&b
+   1  OR                ; a b → a|b
+   2  XOR               ; a b → a^b
+   3  NOT               ; a → ~a
+   4  HALT              ; terminate

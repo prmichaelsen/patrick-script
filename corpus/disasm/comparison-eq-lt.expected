@@ -1,0 +1,3 @@
+   0  EQ                ; a b → (a==b)
+   1  LT                ; a b → (a<b)
+   2  HALT              ; terminate

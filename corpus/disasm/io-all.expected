@@ -1,0 +1,4 @@
+   0  INCHAR            ; read byte → stack
+   1  OUTCHAR           ; pop → write byte
+   2  INNUM             ; read int → stack
+   3  HALT              ; terminate

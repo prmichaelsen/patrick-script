@@ -1,0 +1,5 @@
+   0  MUL               ; a b → a*b
+   1  DIV               ; a b → floor(a/b)
+   2  MOD               ; a b → a mod b
+   3  NEG               ; a → -a
+   4  HALT              ; terminate
