@@ -1,3 +1,29 @@
+# <!-- @scry.entry
+# id: code.patrickscript-test-disasm~c58af944
+# kind: code
+# status: active
+# weight: 0.8
+# tags:
+#   - "topic:patrickscript"
+#   - "topic:testing"
+#   - "patrickscript"
+#   - "pytest"
+#   - "disassembler"
+#   - "round-trip"
+# summary: >
+#   PatrickScript pytest disassembler test suite. Parametrized over all
+#   *.ps files in corpus/disasm/. Runs --disassemble on each and checks
+#   stdout against *.expected. Also: PatrickScript disasm tests, round-trip,
+#   pytest parametrize, disassembler conformance.
+# rationale: >
+#   Without this, the only disasm test runner is a bash script. pytest gives
+#   better output and CI integration.
+# applies: >
+#   running PatrickScript disassembler tests, adding disasm corpus, CI setup
+# seeded_questions:
+#   - "How do I run PatrickScript disassembler tests?"
+#   - "PatrickScript disasm pytest round-trip"
+# @scry.entry.end -->
 """
 PatrickScript disassembler round-trip tests — pytest test suite.
 
