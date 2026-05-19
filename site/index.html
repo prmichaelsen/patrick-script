@@ -1368,19 +1368,34 @@ immediately after the last <code>patrick</code> of the word.</p>
 (8 patricks, 2 spaces, 10 patricks).</p>
 <hr>
 <h2>8. Turing Completeness</h2>
-<p>PatrickScript is Turing complete. A proof sketch:</p>
-<p>PatrickScript can simulate a Turing machine by using its integer memory
-as the TM tape (negative and positive addresses give a bidirectional
-infinite tape), the stack to hold the tape head position and current
-state, and the control flow instructions (JUMP, JUMPZ, JUMPNZ) to
-implement state transitions.</p>
-<p>More directly: PatrickScript has:
-- <strong>Unbounded memory</strong> (LOAD/STORE on integer addresses)
-- <strong>Arbitrary integer arithmetic</strong> (ADD, SUB, MUL, etc.)
-- <strong>Conditional branching</strong> (JUMPZ, JUMPNZ)
-- <strong>Loops</strong> (JUMP backwards creates loops, JUMPZ exits them)</p>
-<p>This is sufficient to compute any computable function. PatrickScript can
-simulate a Brainfuck interpreter, and Brainfuck is known Turing complete.</p>
+<p>PatrickScript is Turing complete. The proof is constructive: a
+Brainfuck interpreter written in PatrickScript, since Brainfuck is
+itself known Turing complete.</p>
+<p>The concrete witness lives at
+<a href="/examples/brainfuck.psa">examples/brainfuck.psa</a> (assembler source) and
+<a href="/examples/brainfuck.ps">examples/brainfuck.ps</a> (compiled). It reads a Brainfuck
+program from stdin (terminated by EOF or the <code>!</code> separator), then
+executes it. All eight Brainfuck instructions are implemented:
+<code>+ - &gt; &lt; [ ] . ,</code>.</p>
+<p>Two corpus tests pin the result:</p>
+<ul>
+<li><code>corpus/brainfuck-loop.{ps,stdin,expected,desc}</code> runs the canonical
+  short program <code>++++++++[&gt;++++++++&lt;-]&gt;+.</code> and produces <code>A</code> (ASCII 65).</li>
+<li><code>corpus/brainfuck-hello.{ps,stdin,expected,desc}</code> runs the classic
+  Brainfuck <code>Hello World!</code> program and produces <code>Hello World!</code>.</li>
+</ul>
+<p>The structural ingredients PatrickScript supplies to make this work:</p>
+<ul>
+<li><strong>Unbounded memory</strong> (LOAD/STORE on integer addresses, positive
+  and negative).</li>
+<li><strong>Arbitrary-precision integer arithmetic</strong> (ADD, SUB, MUL, etc.).</li>
+<li><strong>Conditional branching</strong> (JUMPZ, JUMPNZ).</li>
+<li><strong>Loops</strong> (JUMP backwards creates loops, JUMPZ exits them).</li>
+</ul>
+<p>The interpreter uses <code>mem[0..2]</code> for state (pc, source length, data
+pointer), <code>mem[3..3+N-1]</code> to hold the loaded Brainfuck source, and
+negative addresses <code>mem[-(dp+1)]</code> for the Brainfuck tape — keeping
+source and tape disjoint without large <code>PUSH</code> offsets.</p>
 <hr>
 <h2>9. Program Examples</h2>
 <h3>9.1 Hello World (first character)</h3>

@@ -411,17 +411,17 @@ Brainfuck interpreter written in PatrickScript, since Brainfuck is
 itself known Turing complete.
 
 The concrete witness lives at
-[examples/bf.psa](/examples/bf.psa) (assembler source) and
-[examples/bf.ps](/examples/bf.ps) (compiled). It reads a Brainfuck
+[examples/brainfuck.psa](/examples/brainfuck.psa) (assembler source) and
+[examples/brainfuck.ps](/examples/brainfuck.ps) (compiled). It reads a Brainfuck
 program from stdin (terminated by EOF or the `!` separator), then
 executes it. All eight Brainfuck instructions are implemented:
 `+ - > < [ ] . ,`.
 
 Two corpus tests pin the result:
 
-- `corpus/bf-loop.{ps,stdin,expected,desc}` runs the canonical short
-  program `++++++++[>++++++++<-]>+.` and produces `A` (ASCII 65).
-- `corpus/bf-hello.{ps,stdin,expected,desc}` runs the classic
+- `corpus/brainfuck-loop.{ps,stdin,expected,desc}` runs the canonical
+  short program `++++++++[>++++++++<-]>+.` and produces `A` (ASCII 65).
+- `corpus/brainfuck-hello.{ps,stdin,expected,desc}` runs the classic
   Brainfuck `Hello World!` program and produces `Hello World!`.
 
 The structural ingredients PatrickScript supplies to make this work:
