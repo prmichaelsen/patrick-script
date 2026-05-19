@@ -85,6 +85,14 @@ seeded_questions:
     --code-fg: #ffe9a8;
   }
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  /* Overflow-x guard. Last-resort safety net so no element can push the
+     viewport horizontally on mobile (e.g. an unbreakable token in
+     transcluded spec content, a future addition that forgets to wrap, a
+     long URL inline). Combined with max-width: 100% on the document root
+     and on heavy children (pre, table, img, code). The actual overflowing
+     element should still be fixed where found — the clip here is a guard,
+     not a substitute. */
+  html, body { overflow-x: hidden; max-width: 100vw; }
   html { background: var(--bg); }
   body {
     background: var(--bg);
@@ -97,6 +105,12 @@ seeded_questions:
     max-width: 880px;
     margin: 0 auto;
   }
+  /* Hard ceiling on intrinsically-wide media. `max-width: 100%` keeps
+     these children from busting their container; tables get a
+     `display: block` + `overflow-x: auto` treatment lower down so a
+     genuinely-wide table scrolls inside its own box rather than the
+     page. */
+  img, video, iframe, svg { max-width: 100%; height: auto; }
   a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
   a:hover { border-bottom-color: var(--accent); }
   h1 {
@@ -277,7 +291,17 @@ seeded_questions:
     padding: 0.05em 0.4em;
     border-radius: 2px;
     font-size: 0.92em;
-    white-space: pre;
+    /* `pre-wrap` (not `pre`) so a long inline token like
+       `patrickpatrickpatrickpatrick…` or a long URL can wrap on mobile.
+       Whitespace is still preserved, so the canonical visible-space case
+       (`<code> </code>` demonstrating the SPACE token inline) renders
+       identically — a visible padded box. Combined with the two break
+       rules below, even unbreakable runs of `patrick` characters fall
+       back to mid-token wrapping rather than dragging the body sideways. */
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
   }
   /* Don't double-decorate code that lives inside a pre — pre already has
      border, bg, padding, color; the inner <code> should inherit. */
@@ -391,8 +415,16 @@ seeded_questions:
     overflow-wrap: anywhere;
     overflow-x: visible;
   }
+  /* Spec tables (rendered from markdown) can be intrinsically wide
+     (the ISA opcode table, the encoding examples). On narrow viewports
+     box them into their own scroll container so the page itself stays
+     within the viewport — the table scrolls horizontally inside its
+     box rather than dragging the body sideways. */
   .spec-embed table {
     margin: 1rem 0 1.6rem;
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
   }
   .spec-embed th, .spec-embed td {
     padding: 0.4rem 0.9rem 0.4rem 0;
@@ -418,8 +450,21 @@ seeded_questions:
        horizontal scroll on phones. `.raw` keeps `white-space: pre` so the
        patrick…patrick truncation stays visually intact. */
     pre:not(.raw) { white-space: pre-wrap; word-break: break-word; overflow-x: visible; }
+    /* The Hello World .raw column has `white-space: pre`; cap it to the
+       container so the long truncated patrick…patrick line cannot push
+       the column wider than its grid track. The pre's own overflow-x
+       auto handles internal scroll. */
+    pre.raw { max-width: 100%; overflow-x: auto; }
     /* Larger tap targets on the Read-further list (44pt-ish). */
     ul li a { display: inline-block; padding: 0.55rem 0; }
+    /* The page-level ISA / mnemonic table also gets the scroll-in-box
+       treatment on mobile (same as .spec-embed table) — otherwise a wide
+       row would force the body wider than the viewport. */
+    table {
+      display: block;
+      max-width: 100%;
+      overflow-x: auto;
+    }
     .spec-embed h1 { font-size: 1.3rem; }
     .spec-embed h2 { font-size: 1.05rem; }
   }
