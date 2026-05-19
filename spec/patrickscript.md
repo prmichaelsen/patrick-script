@@ -406,22 +406,36 @@ A concrete example: OUTCHAR followed by HALT is the byte sequence
 
 ## 8. Turing Completeness
 
-PatrickScript is Turing complete. A proof sketch:
+PatrickScript is Turing complete. The proof is constructive: a
+Brainfuck interpreter written in PatrickScript, since Brainfuck is
+itself known Turing complete.
 
-PatrickScript can simulate a Turing machine by using its integer memory
-as the TM tape (negative and positive addresses give a bidirectional
-infinite tape), the stack to hold the tape head position and current
-state, and the control flow instructions (JUMP, JUMPZ, JUMPNZ) to
-implement state transitions.
+The concrete witness lives at
+[examples/bf.psa](/examples/bf.psa) (assembler source) and
+[examples/bf.ps](/examples/bf.ps) (compiled). It reads a Brainfuck
+program from stdin (terminated by EOF or the `!` separator), then
+executes it. All eight Brainfuck instructions are implemented:
+`+ - > < [ ] . ,`.
 
-More directly: PatrickScript has:
-- **Unbounded memory** (LOAD/STORE on integer addresses)
-- **Arbitrary integer arithmetic** (ADD, SUB, MUL, etc.)
-- **Conditional branching** (JUMPZ, JUMPNZ)
-- **Loops** (JUMP backwards creates loops, JUMPZ exits them)
+Two corpus tests pin the result:
 
-This is sufficient to compute any computable function. PatrickScript can
-simulate a Brainfuck interpreter, and Brainfuck is known Turing complete.
+- `corpus/bf-loop.{ps,stdin,expected,desc}` runs the canonical short
+  program `++++++++[>++++++++<-]>+.` and produces `A` (ASCII 65).
+- `corpus/bf-hello.{ps,stdin,expected,desc}` runs the classic
+  Brainfuck `Hello World!` program and produces `Hello World!`.
+
+The structural ingredients PatrickScript supplies to make this work:
+
+- **Unbounded memory** (LOAD/STORE on integer addresses, positive
+  and negative).
+- **Arbitrary-precision integer arithmetic** (ADD, SUB, MUL, etc.).
+- **Conditional branching** (JUMPZ, JUMPNZ).
+- **Loops** (JUMP backwards creates loops, JUMPZ exits them).
+
+The interpreter uses `mem[0..2]` for state (pc, source length, data
+pointer), `mem[3..3+N-1]` to hold the loaded Brainfuck source, and
+negative addresses `mem[-(dp+1)]` for the Brainfuck tape — keeping
+source and tape disjoint without large `PUSH` offsets.
 
 ---
 

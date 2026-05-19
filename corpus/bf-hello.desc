@@ -1,0 +1,7 @@
+Hosts the classic Brainfuck "Hello World!" program inside the PatrickScript
+BF interpreter (examples/bf.psa, compiled to bf.ps). The BF source is fed
+on stdin; the interpreter reads it to EOF, then executes it. Exercises +,
+-, >, <, [, ], and . — every BF instruction except , (input).
+
+This test discharges spec §8's Turing-completeness claim: PatrickScript
+hosts a Brainfuck interpreter, and Brainfuck is itself Turing complete.

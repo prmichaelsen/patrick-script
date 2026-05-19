@@ -1,0 +1,7 @@
+Smoke test for the PatrickScript BF interpreter: runs the canonical short
+BF program `++++++++[>++++++++<-]>+.` which computes 8 * 8 + 1 = 65 and
+prints it as ASCII 'A'.
+
+Exercises +, -, >, <, [, ], and . in a single 8-iteration loop. Smaller
+and faster than bf-hello — useful when the larger test fails and the
+interpreter needs a minimal repro for debugging.

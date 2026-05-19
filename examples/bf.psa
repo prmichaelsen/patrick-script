@@ -1,0 +1,377 @@
+; Brainfuck interpreter in PatrickScript v1.3.0
+;
+; Discharges the spec §8 Turing-completeness claim with running code:
+; PatrickScript can simulate a Brainfuck interpreter, and Brainfuck is
+; itself Turing complete.
+;
+; Reads a BF source program from stdin (terminated by EOF or '!'),
+; then executes it. Bytes after '!' (if present) are consumed by BF's
+; `,` operator at runtime.
+;
+; Memory layout:
+;   mem[0]      = pc       (source instruction pointer, 0-indexed)
+;   mem[1]      = N        (source length in bytes)
+;   mem[2]      = dp       (BF tape data pointer)
+;   mem[3+i]    = source byte i  (i in 0..N-1)
+;   mem[-(dp+1)] = BF tape cell at index dp  (so cell 0 lives at mem[-1])
+;
+; Semantics implemented:
+;   '+' (43)  cell++
+;   '-' (45)  cell--
+;   '>' (62)  dp++
+;   '<' (60)  dp--
+;   '[' (91)  if cell == 0, scan forward past matching ']'
+;   ']' (93)  if cell != 0, scan backward to matching '['
+;   '.' (46)  OUTCHAR cell
+;   ',' (44)  cell = INCHAR  (may be -1 on EOF)
+;   any other byte:  no-op (skipped during dispatch)
+;
+; Cells are arbitrary-precision integers; OUTCHAR's implicit mod-256
+; produces canonical 8-bit BF output for cell values in [0, 255].
+
+; --- Initialise machine state -----------------------------------------
+PUSH 0
+PUSH 0
+STORE                  ; mem[0] = 0   (pc)
+PUSH 0
+PUSH 1
+STORE                  ; mem[1] = 0   (N)
+PUSH 0
+PUSH 2
+STORE                  ; mem[2] = 0   (dp)
+
+; --- Read source from stdin until EOF or '!' --------------------------
+read_loop:
+INCHAR                 ; [b]
+DUP                    ; [b, b]
+PUSH 1
+ADD                    ; [b, b+1]
+JUMPZ start_exec       ; if b == -1 (EOF), begin execution
+
+DUP                    ; [b, b]
+PUSH 33
+EQ                     ; [b, b==33]
+JUMPNZ source_done     ; if b == '!' (33), stop reading source
+
+; store b at mem[3 + N]
+PUSH 1
+LOAD                   ; [b, N]
+PUSH 3
+ADD                    ; [b, N+3]
+STORE                  ; mem[N+3] = b
+
+; N = N + 1
+PUSH 1
+LOAD
+PUSH 1
+ADD
+PUSH 1
+STORE                  ; mem[1] = N + 1
+
+JUMP read_loop
+
+source_done:
+POP                    ; discard '!'
+JUMP main_loop
+
+start_exec:
+POP                    ; discard -1 sentinel
+
+; --- Main interpretation loop ----------------------------------------
+main_loop:
+; if pc >= N, halt
+PUSH 1
+LOAD                   ; [N]
+PUSH 0
+LOAD                   ; [N, pc]
+GT                     ; [N>pc]    1 if more source remains
+JUMPZ done             ; if N <= pc, halt
+
+; fetch source byte: mem[3 + pc]
+PUSH 0
+LOAD
+PUSH 3
+ADD
+LOAD                   ; [byte]
+
+; dispatch table
+DUP
+PUSH 43
+EQ
+JUMPNZ op_plus
+
+DUP
+PUSH 45
+EQ
+JUMPNZ op_minus
+
+DUP
+PUSH 62
+EQ
+JUMPNZ op_right
+
+DUP
+PUSH 60
+EQ
+JUMPNZ op_left
+
+DUP
+PUSH 91
+EQ
+JUMPNZ op_lbracket
+
+DUP
+PUSH 93
+EQ
+JUMPNZ op_rbracket
+
+DUP
+PUSH 46
+EQ
+JUMPNZ op_dot
+
+DUP
+PUSH 44
+EQ
+JUMPNZ op_comma
+
+; unknown byte -> no-op
+POP
+JUMP advance_pc
+
+; --- Operations -------------------------------------------------------
+
+op_plus:
+POP                    ; discard the source byte
+PUSH 2
+LOAD
+PUSH 1
+ADD
+NEG                    ; [addr = -(dp+1)]
+DUP                    ; [addr, addr]
+LOAD                   ; [addr, val]
+PUSH 1
+ADD                    ; [addr, val+1]
+SWAP                   ; [val+1, addr]
+STORE
+JUMP advance_pc
+
+op_minus:
+POP
+PUSH 2
+LOAD
+PUSH 1
+ADD
+NEG
+DUP
+LOAD
+PUSH 1
+SUB
+SWAP
+STORE
+JUMP advance_pc
+
+op_right:
+POP
+PUSH 2
+LOAD
+PUSH 1
+ADD                    ; [dp+1]
+PUSH 2
+STORE                  ; mem[2] = dp+1
+JUMP advance_pc
+
+op_left:
+POP
+PUSH 2
+LOAD
+PUSH 1
+SUB                    ; [dp-1]
+PUSH 2
+STORE
+JUMP advance_pc
+
+op_dot:
+POP
+PUSH 2
+LOAD
+PUSH 1
+ADD
+NEG
+LOAD                   ; [cell]
+OUTCHAR
+JUMP advance_pc
+
+op_comma:
+POP
+INCHAR                 ; [b]
+PUSH 2
+LOAD
+PUSH 1
+ADD
+NEG                    ; [b, addr]
+STORE                  ; mem[addr] = b
+JUMP advance_pc
+
+op_lbracket:
+POP
+PUSH 2
+LOAD
+PUSH 1
+ADD
+NEG
+LOAD                   ; [cell]
+JUMPZ scan_forward     ; if cell == 0, skip ahead
+JUMP advance_pc
+
+op_rbracket:
+POP
+PUSH 2
+LOAD
+PUSH 1
+ADD
+NEG
+LOAD
+JUMPNZ scan_backward   ; if cell != 0, loop back
+JUMP advance_pc
+
+advance_pc:
+PUSH 0
+LOAD
+PUSH 1
+ADD
+PUSH 0
+STORE                  ; mem[0] = pc + 1
+JUMP main_loop
+
+; --- scan_forward -----------------------------------------------------
+; Entry: pc points at the '[' that initiated the skip.
+; Exit:  pc points to the instruction immediately after the matching ']'.
+
+scan_forward:
+PUSH 0
+LOAD
+PUSH 1
+ADD
+PUSH 0
+STORE                  ; pc++ (move past the '[')
+PUSH 1                 ; depth = 1
+
+scan_fwd_loop:
+DUP                    ; [depth, depth]
+JUMPZ scan_fwd_done
+
+; ch = source[pc]
+PUSH 0
+LOAD
+PUSH 3
+ADD
+LOAD                   ; [depth, ch]
+
+DUP
+PUSH 91
+EQ
+JUMPNZ scan_fwd_open
+
+DUP
+PUSH 93
+EQ
+JUMPNZ scan_fwd_close
+
+POP                    ; other char
+JUMP scan_fwd_advance
+
+scan_fwd_open:
+POP
+PUSH 1
+ADD                    ; depth++
+JUMP scan_fwd_advance
+
+scan_fwd_close:
+POP
+PUSH 1
+SUB                    ; depth--
+JUMP scan_fwd_advance
+
+scan_fwd_advance:
+PUSH 0
+LOAD
+PUSH 1
+ADD
+PUSH 0
+STORE                  ; pc++
+JUMP scan_fwd_loop
+
+scan_fwd_done:
+POP                    ; discard depth (== 0)
+JUMP main_loop
+
+; --- scan_backward ----------------------------------------------------
+; Entry: pc points at the ']' that triggered the loop-back.
+; Exit:  pc points at the matching '['; main_loop re-tests it next iter.
+
+scan_backward:
+PUSH 0
+LOAD
+PUSH 1
+SUB
+PUSH 0
+STORE                  ; pc-- (move before the ']')
+PUSH 1                 ; depth = 1
+
+scan_bwd_loop:
+DUP
+JUMPZ scan_bwd_done
+
+PUSH 0
+LOAD
+PUSH 3
+ADD
+LOAD                   ; [depth, ch]
+
+DUP
+PUSH 93
+EQ
+JUMPNZ scan_bwd_close
+
+DUP
+PUSH 91
+EQ
+JUMPNZ scan_bwd_open
+
+POP
+JUMP scan_bwd_advance
+
+scan_bwd_close:
+POP
+PUSH 1
+ADD                    ; depth++
+JUMP scan_bwd_advance
+
+scan_bwd_open:
+POP
+PUSH 1
+SUB                    ; depth--
+JUMP scan_bwd_advance
+
+scan_bwd_advance:
+PUSH 0
+LOAD
+PUSH 1
+SUB
+PUSH 0
+STORE                  ; pc--
+JUMP scan_bwd_loop
+
+scan_bwd_done:
+POP                    ; discard depth (== 0)
+PUSH 0
+LOAD
+PUSH 1
+ADD
+PUSH 0
+STORE                  ; pc++  (land on the matching '[')
+JUMP main_loop
+
+done:
+HALT
