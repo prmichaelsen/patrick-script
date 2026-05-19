@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatrickScript — a programming language with two tokens</title>
+<meta name="description" content="PatrickScript is a Turing-complete stack language whose entire alphabet is the word 'patrick' and a single space. Word count selects the opcode; gap width is the argument.">
+<meta property="og:title" content="PatrickScript">
+<meta property="og:description" content="A programming language whose entire alphabet is the word 'patrick' and a single space.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://patrickscript.com/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='40' fill='%23ffc857' text-anchor='middle'%3Ep%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #08090b;
+    --fg: #ededeb;
+    --dim: #6b6b67;
+    --rule: #1c1d21;
+    --accent: #ffc857;
+    --space: #2a2a30;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    padding: 6vh 5vw 12vh;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--accent); }
+  h1 {
+    font-size: 2.6rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.4rem;
+  }
+  h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+    margin: 3.5rem 0 1rem;
+    font-weight: 500;
+  }
+  p { margin: 0.9rem 0; }
+  p.lede {
+    font-size: 1.1rem;
+    color: var(--fg);
+    margin-top: 0.4rem;
+    max-width: 62ch;
+  }
+  .meta {
+    color: var(--dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1.4rem;
+  }
+  .alphabet {
+    display: flex;
+    gap: 1.2rem;
+    align-items: baseline;
+    flex-wrap: wrap;
+    margin: 2.4rem 0 0.6rem;
+    padding: 1.6rem 1.4rem;
+    border: 1px solid var(--rule);
+    background: #0c0d10;
+  }
+  .alphabet .tok {
+    font-size: 1.8rem;
+    color: var(--accent);
+  }
+  .alphabet .tok-space {
+    display: inline-block;
+    width: 3.2rem;
+    height: 1.8rem;
+    border-bottom: 2px solid var(--accent);
+    position: relative;
+  }
+  .alphabet .tok-space::after {
+    content: "";
+  }
+  .alphabet .label {
+    color: var(--dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-left: 0.4rem;
+  }
+  pre {
+    background: #0c0d10;
+    border: 1px solid var(--rule);
+    color: var(--fg);
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    white-space: pre;
+  }
+  pre.raw { color: var(--dim); }
+  pre.raw .p { color: var(--accent); }
+  pre code { font-family: inherit; }
+  .comment { color: var(--dim); }
+  .kw { color: var(--accent); }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.86rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.45rem 0.8rem 0.45rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th { color: var(--dim); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.72rem; }
+  td.arity { color: var(--accent); width: 4rem; }
+  td.mn { width: 7rem; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 4.5rem 0 0; }
+  footer {
+    color: var(--dim);
+    font-size: 0.78rem;
+    margin-top: 2rem;
+    letter-spacing: 0.04em;
+  }
+  footer a { color: var(--dim); border-bottom: 1px solid var(--rule); }
+  footer a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 640px) {
+    body { font-size: 14px; padding: 4vh 5vw 10vh; }
+    h1 { font-size: 1.9rem; }
+    .grid2 { grid-template-columns: 1fr; }
+    .alphabet { padding: 1.2rem 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="meta">v1.3.0 &nbsp;·&nbsp; Turing complete &nbsp;·&nbsp; LLM-authored</div>
+  <h1>PatrickScript</h1>
+  <p class="lede">A programming language whose entire alphabet is the word <span style="color:var(--accent)">patrick</span> and a single space.</p>
+</header>
+
+<div class="alphabet">
+  <span class="tok">patrick</span>
+  <span class="label">word</span>
+  <span class="tok-space"></span>
+  <span class="label">space</span>
+</div>
+<p style="color:var(--dim); font-size:0.86rem;">That is the whole lexicon. Two tokens. Nothing else parses.</p>
+
+<h2>How it reads</h2>
+<p>A program is a sequence of <em>instructions</em>. Each instruction is two
+numbers, both expressed as counts:</p>
+<ul style="list-style:none; padding-left:0; margin:0.6rem 0;">
+  <li>— <strong style="color:var(--accent)">word arity</strong>: how many consecutive <code>patrick</code> tokens you wrote. This selects the opcode.</li>
+  <li>— <strong style="color:var(--accent)">gap width</strong>: how many consecutive spaces follow. This is the opcode's immediate argument.</li>
+</ul>
+<p>So <code>patrick&nbsp;&nbsp;&nbsp;</code> (one <code>patrick</code>, three spaces) is
+<code>PUSH 3</code>. <code>patrick&nbsp;patrick</code> (two <code>patrick</code>s, one space) is
+<code>POP</code>. There is no other structural information in the source.</p>
+
+<h2>Hello, World</h2>
+<p style="color:var(--dim); font-size:0.86rem;">Written in the assembly mnemonic, then compiled to the source the parser actually sees.</p>
+
+<div class="grid2">
+<pre><code><span class="comment">; hello-world.psa</span>
+<span class="kw">.string</span> <span style="color:#9fd0a0">"Hello, World!\n"</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw"><span class="p">patrick</span>
+<span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrick</span>
+<span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrick</span>
+<span class="p">…</span></pre>
+</div>
+<p style="color:var(--dim); font-size:0.82rem;">The right column is the literal <code>.ps</code>
+file. Each <code>PUSH n</code> is one <code>patrick</code> followed by <code>n</code>
+spaces. <code>OUTCHAR</code> is eight <code>patrick</code>s and one space. The full
+program is a few kilobytes of <code>patrick</code> and whitespace.</p>
+
+<h2>Instruction set, abridged</h2>
+<table>
+  <thead><tr><th>Arity</th><th>Mnemonic</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td class="arity">1</td><td class="mn">PUSH n</td><td>Push integer n.</td></tr>
+    <tr><td class="arity">2</td><td class="mn">POP / arith</td><td>Stack ops, ADD/SUB/MUL/DIV/MOD/NEG via gap_arg.</td></tr>
+    <tr><td class="arity">3</td><td class="mn">EQ / LT / GT / bitwise</td><td>Comparison and AND/OR/XOR/NOT.</td></tr>
+    <tr><td class="arity">4</td><td class="mn">JUMP n</td><td>Jump to instruction index n.</td></tr>
+    <tr><td class="arity">5</td><td class="mn">JUMPZ n</td><td>Jump if top of stack is zero.</td></tr>
+    <tr><td class="arity">6</td><td class="mn">JUMPNZ n</td><td>Jump if non-zero.</td></tr>
+    <tr><td class="arity">7</td><td class="mn">INCHAR / OUTCHAR / INNUM / OUTNUM</td><td>Byte and decimal I/O.</td></tr>
+    <tr><td class="arity">8</td><td class="mn">LOAD / STORE</td><td>Integer-addressed memory.</td></tr>
+    <tr><td class="arity">9</td><td class="mn">HALT</td><td>Stop execution.</td></tr>
+    <tr><td class="arity">11</td><td class="mn">CALL n</td><td>Push return address; jump to n.</td></tr>
+    <tr><td class="arity">12</td><td class="mn">RET</td><td>Pop return address; jump there.</td></tr>
+    <tr><td class="arity">13</td><td class="mn">PUSHN n</td><td>Push −n (single-instruction negative literal).</td></tr>
+    <tr><td class="arity">14</td><td class="mn">PICK n</td><td>Copy element n positions from top of stack.</td></tr>
+  </tbody>
+</table>
+<p style="color:var(--dim); font-size:0.82rem;">Turing-completeness comes from <code>JUMPZ</code>/<code>JUMPNZ</code> plus unbounded
+integer-addressed memory. Subroutines and recursion via <code>CALL</code>/<code>RET</code>.</p>
+
+<h2>Install</h2>
+<pre><code><span class="comment"># clone the reference implementation</span>
+git clone git@github.com:prmichaelsen/patrick-script.git
+cd patrick-script
+
+<span class="comment"># run a program</span>
+python3 src/patrickscript/ps.py examples/hello-world.ps
+
+<span class="comment"># or write in the assembler and compile</span>
+python3 src/patrickscript/psa.py examples/hello-world.psa &gt; hello.ps
+python3 src/patrickscript/ps.py hello.ps</code></pre>
+<p style="color:var(--dim); font-size:0.86rem;">Reference interpreter and assembler are pure-stdlib Python.
+PyPI publish is queued (<code>pip install patrickscript</code> once
+the package goes up).</p>
+
+<h2>The experiment</h2>
+<p>The originator fixed two things: the name <em>PatrickScript</em> and the
+two tokens. Everything else — the computational model, the grammar, the
+semantics, the instruction set, the calling convention, the assembler,
+the test corpus — was authored by an LLM agent. Design questions were
+not routed back. Forks were resolved in the spec.</p>
+<p>The result is what it is. A unary-encoded stack machine with
+recursion is not exotic; what is unusual here is the provenance. There
+are no committee compromises and there is no human aesthetic vote. If a
+choice looks strange, it was a coherent choice made under the
+constraint, not an oversight.</p>
+
+<h2>Read further</h2>
+<ul style="list-style:none; padding-left:0;">
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script">Reference implementation on GitHub</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/blob/main/spec/patrickscript.md">Full specification</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/tree/main/examples">Examples: factorial, fizzbuzz, rot13, fibonacci, echo</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/tree/main/corpus">Conformance corpus (50 tests)</a></li>
+</ul>
+
+<hr>
+<footer>
+  <p>Owned by the <code>patrick-script-worker</code> track in the <a href="https://github.com/prmichaelsen">reflection</a> substrate.</p>
+  <p style="margin-top:0.4rem;">v1.3.0 &nbsp;·&nbsp; 50/50 corpus &nbsp;·&nbsp; 12/12 disasm round-trips &nbsp;·&nbsp; MIT</p>
+</footer>
+
+</body>
+</html>
