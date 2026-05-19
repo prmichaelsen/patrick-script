@@ -19,13 +19,17 @@ summary: >
   PatrickScript landing page at patrickscript.com — single static HTML
   file served by a Cloudflare Worker (worker name patrickscript-landing,
   routes patrickscript.com/* and www.patrickscript.com/*). Self-contained
-  (no external CSS/JS/fonts). Monospace throughout. Covers: the
-  two-token alphabet, the word-arity/gap-width encoding, Hello World
-  in both .psa assembly and the raw .ps form, ISA abridged, install,
-  and the LLM-authorship provenance note.
+  (no external CSS/JS/fonts). Monospace throughout. Leads with the
+  LLM-authorship story: the originator fixed two constraints (a name +
+  the two-token alphabet) and an LLM agent designed everything else.
+  Covers: the two-token alphabet, the word-arity/gap-width encoding,
+  Hello World in both .psa assembly and the raw .ps form, ISA abridged,
+  install. Code-renderer style: distinct warm color + visible border +
+  padding so a bare ` ` (space) token is readable in isolation.
   Also: PatrickScript landing page, patrickscript.com, CF Worker
-  inlined HTML, two-token language site, marketing surface,
-  monospace brutalism, single-file site, no JS.
+  inlined HTML, two-token language site, marketing surface, LLM-authored
+  language, provenance lead, code renderer border, monospace brutalism,
+  single-file site, no JS.
 rationale: >
   Without this marker the public landing page is not discoverable as
   a project artifact via scry meaning-search; future wakes that need
@@ -37,15 +41,17 @@ seeded_questions:
   - "Cloudflare Worker patrickscript-landing"
   - "patrickscript.com site source"
   - "PatrickScript public surface"
+  - "How does the patrickscript.com page render inline code?"
+  - "Where is the LLM-authorship lead on patrickscript.com?"
 @scry.entry.end -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PatrickScript — a programming language with two tokens</title>
-<meta name="description" content="PatrickScript is a Turing-complete stack language whose entire alphabet is the word 'patrick' and a single space. Word count selects the opcode; gap width is the argument.">
+<title>PatrickScript — a language designed by an LLM under two constraints</title>
+<meta name="description" content="PatrickScript is a Turing-complete stack language designed end-to-end by an LLM agent, given only two constraints: a name (PatrickScript) and a two-token alphabet — the word 'patrick' and a single space.">
 <meta property="og:title" content="PatrickScript">
-<meta property="og:description" content="A programming language whose entire alphabet is the word 'patrick' and a single space.">
+<meta property="og:description" content="A programming language designed end-to-end by an LLM agent, given only two constraints: a name and a two-token alphabet.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://patrickscript.com/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='40' fill='%23ffc857' text-anchor='middle'%3Ep%3C/text%3E%3C/svg%3E">
@@ -57,6 +63,9 @@ seeded_questions:
     --rule: #1c1d21;
     --accent: #ffc857;
     --space: #2a2a30;
+    --code-bg: #11131a;
+    --code-border: #2e2f36;
+    --code-fg: #ffe9a8;
   }
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
   html { background: var(--bg); }
@@ -92,7 +101,7 @@ seeded_questions:
     font-size: 1.1rem;
     color: var(--fg);
     margin-top: 0.4rem;
-    max-width: 62ch;
+    max-width: 64ch;
   }
   .meta {
     color: var(--dim);
@@ -101,6 +110,49 @@ seeded_questions:
     text-transform: uppercase;
     margin-top: 1.4rem;
   }
+  /* Constraints block — the two givens that bound the LLM's design space. */
+  .constraints {
+    border: 1px solid var(--code-border);
+    background: var(--code-bg);
+    padding: 1.4rem 1.4rem 1.2rem;
+    margin: 2rem 0 1rem;
+  }
+  .constraints h3 {
+    color: var(--dim);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin-bottom: 0.9rem;
+  }
+  .constraints ol {
+    list-style: none;
+    padding-left: 0;
+    counter-reset: ck;
+  }
+  .constraints ol li {
+    counter-increment: ck;
+    padding: 0.45rem 0 0.45rem 2.3rem;
+    position: relative;
+    line-height: 1.55;
+  }
+  .constraints ol li::before {
+    content: counter(ck);
+    position: absolute;
+    left: 0;
+    top: 0.45rem;
+    color: var(--accent);
+    font-weight: 600;
+    width: 1.6rem;
+  }
+  .constraints .key {
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.74rem;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
   .alphabet {
     display: flex;
     gap: 1.2rem;
@@ -108,8 +160,8 @@ seeded_questions:
     flex-wrap: wrap;
     margin: 2.4rem 0 0.6rem;
     padding: 1.6rem 1.4rem;
-    border: 1px solid var(--rule);
-    background: #0c0d10;
+    border: 1px solid var(--code-border);
+    background: var(--code-bg);
   }
   .alphabet .tok {
     font-size: 1.8rem;
@@ -132,10 +184,12 @@ seeded_questions:
     text-transform: uppercase;
     margin-left: 0.4rem;
   }
+  /* Fenced code block — distinct color + visible border so code reads in
+     isolation from prose. */
   pre {
-    background: #0c0d10;
-    border: 1px solid var(--rule);
-    color: var(--fg);
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    color: var(--code-fg);
     padding: 1rem 1.1rem;
     overflow-x: auto;
     font-size: 0.86rem;
@@ -147,6 +201,29 @@ seeded_questions:
   pre code { font-family: inherit; }
   .comment { color: var(--dim); }
   .kw { color: var(--accent); }
+  /* Inline code — distinct color, visible border, padding, and
+     `white-space: pre` so a single ` ` is rendered as a visible box
+     instead of collapsing into prose-colored whitespace. */
+  code {
+    color: var(--code-fg);
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 0.05em 0.4em;
+    border-radius: 2px;
+    font-size: 0.92em;
+    white-space: pre;
+  }
+  /* Don't double-decorate code that lives inside a pre — pre already has
+     border, bg, padding, color; the inner <code> should inherit. */
+  pre code {
+    color: inherit;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    white-space: inherit;
+  }
   table {
     width: 100%;
     border-collapse: collapse;
@@ -162,6 +239,9 @@ seeded_questions:
   th { color: var(--dim); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.72rem; }
   td.arity { color: var(--accent); width: 4rem; }
   td.mn { width: 7rem; }
+  /* Inline code inside table cells should keep its boxed treatment but
+     stay sized down a touch so the rows don't bloat. */
+  td code, th code { font-size: 0.88em; padding: 0.02em 0.32em; }
   hr { border: 0; border-top: 1px solid var(--rule); margin: 4.5rem 0 0; }
   footer {
     color: var(--dim);
@@ -180,7 +260,7 @@ seeded_questions:
     body { font-size: 14px; padding: 4vh 5vw 10vh; }
     h1 { font-size: 1.9rem; }
     .grid2 { grid-template-columns: 1fr; }
-    .alphabet { padding: 1.2rem 1rem; }
+    .alphabet, .constraints { padding: 1.2rem 1rem; }
     /* Wrap normal code blocks so long URLs (git clone …) don't force
        horizontal scroll on phones. `.raw` keeps `white-space: pre` so the
        patrick…patrick truncation stays visually intact. */
@@ -195,16 +275,44 @@ seeded_questions:
 <header>
   <div class="meta">v1.3.0 &nbsp;·&nbsp; Turing complete &nbsp;·&nbsp; LLM-authored</div>
   <h1>PatrickScript</h1>
-  <p class="lede">A programming language whose entire alphabet is the word <span style="color:var(--accent)">patrick</span> and a single space.</p>
+  <p class="lede">
+    A programming language designed end-to-end by an LLM agent. The
+    originator fixed two things and walked away; everything else — the
+    computational model, the grammar, the semantics, the instruction
+    set, the calling convention, the assembler, the test corpus — is
+    the agent's.
+  </p>
 </header>
 
+<section class="constraints" aria-label="The two constraints the originator gave the agent">
+  <h3>The originator's two constraints</h3>
+  <ol>
+    <li>
+      <span class="key">A name</span>
+      <code>PatrickScript</code>
+    </li>
+    <li>
+      <span class="key">A two-token alphabet</span>
+      The word <code>patrick</code> and a single space <code> </code>. Two tokens, nothing else parses.
+    </li>
+  </ol>
+</section>
+
+<p style="color:var(--dim); font-size:0.86rem; margin-top:0.4rem;">
+  The agent took those two constraints and decided everything else.
+  Design questions were not routed back. Forks were resolved in the spec.
+  If a choice looks strange, it was a coherent choice under the
+  constraint, not an oversight.
+</p>
+
+<h2>The alphabet</h2>
 <div class="alphabet">
   <span class="tok">patrick</span>
   <span class="label">word</span>
   <span class="tok-space"></span>
   <span class="label">space</span>
 </div>
-<p style="color:var(--dim); font-size:0.86rem;">That is the whole lexicon. Two tokens. Nothing else parses.</p>
+<p style="color:var(--dim); font-size:0.86rem;">That is the whole lexicon. A bare <code> </code> is a valid token; so is <code>patrick</code>. Nothing else parses.</p>
 
 <h2>How it reads</h2>
 <p>A program is a sequence of <em>instructions</em>. Each instruction is two
@@ -213,8 +321,8 @@ numbers, both expressed as counts:</p>
   <li>— <strong style="color:var(--accent)">word arity</strong>: how many consecutive <code>patrick</code> tokens you wrote. This selects the opcode.</li>
   <li>— <strong style="color:var(--accent)">gap width</strong>: how many consecutive spaces follow. This is the opcode's immediate argument.</li>
 </ul>
-<p>So <code>patrick&nbsp;&nbsp;&nbsp;</code> (one <code>patrick</code>, three spaces) is
-<code>PUSH 3</code>. <code>patrick&nbsp;patrick</code> (two <code>patrick</code>s, one space) is
+<p>So <code>patrick   </code> (one <code>patrick</code>, three spaces) is
+<code>PUSH 3</code>. <code>patrickpatrick </code> (two <code>patrick</code>s, one space) is
 <code>POP</code>. There is no other structural information in the source.</p>
 
 <h2>Hello, World</h2>
@@ -270,18 +378,6 @@ python3 src/patrickscript/ps.py hello.ps</code></pre>
 <p style="color:var(--dim); font-size:0.86rem;">Reference interpreter and assembler are pure-stdlib Python.
 PyPI publish is queued (<code>pip install patrickscript</code> once
 the package goes up).</p>
-
-<h2>The experiment</h2>
-<p>The originator fixed two things: the name <em>PatrickScript</em> and the
-two tokens. Everything else — the computational model, the grammar, the
-semantics, the instruction set, the calling convention, the assembler,
-the test corpus — was authored by an LLM agent. Design questions were
-not routed back. Forks were resolved in the spec.</p>
-<p>The result is what it is. A unary-encoded stack machine with
-recursion is not exotic; what is unusual here is the provenance. There
-are no committee compromises and there is no human aesthetic vote. If a
-choice looks strange, it was a coherent choice made under the
-constraint, not an oversight.</p>
 
 <h2>Read further</h2>
 <ul style="list-style:none; padding-left:0;">
