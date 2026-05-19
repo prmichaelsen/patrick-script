@@ -1,0 +1,616 @@
+<!doctype html>
+<!-- @scry.entry
+id: code.patrickscript-landing-html~8fdeae3c
+kind: code
+status: active
+weight: 0.85
+tags:
+  - "topic:patrickscript"
+  - "patrickscript"
+  - "topic:landing-page"
+  - "landing-page"
+  - "scope:patrick-script"
+  - "patrick-script"
+  - "topic:cloudflare-worker"
+  - "cloudflare-worker"
+  - "topic:public-surface"
+  - "public-surface"
+  - "topic:template"
+  - "template"
+  - "topic:transclusion"
+  - "transclusion"
+summary: >
+  PatrickScript landing page TEMPLATE for patrickscript.com — source of
+  truth, paired with site/build_site.py and the canonical spec at
+  spec/patrickscript.md. The build script transcludes the spec into the
+  PATRICKSCRIPT-SPEC-HTML placeholder under the Full Specification section
+  and writes site/index.html (generated, served by the CF Worker
+  patrickscript-landing, routes patrickscript.com/* and
+  www.patrickscript.com/*). Self-contained (no external CSS/JS/fonts).
+  Monospace throughout. Leads with the LLM-authorship story: the
+  originator fixed two constraints (a name + the two-token alphabet)
+  and an LLM agent designed everything else. Covers: the two-token
+  alphabet, the word-arity/gap-width encoding, Hello World in both .psa
+  assembly and the raw .ps form, three full programs (add/square/echo),
+  ISA abridged, install, read-further links, and the full spec inlined
+  from source. Code-renderer style: distinct warm color + visible border
+  + padding so a bare ` ` (space) token is readable in isolation.
+  Also: PatrickScript landing page template, patrickscript.com, CF
+  Worker inlined HTML, two-token language site, marketing surface,
+  LLM-authored language, provenance lead, code renderer border,
+  monospace brutalism, single-file site, no JS, full spec inlined,
+  build-time transclusion, SPEC_HTML placeholder.
+rationale: >
+  Without this template the public landing page is not discoverable as
+  a project artifact via scry meaning-search; future wakes that need
+  to update copy or visual identity won't know where to edit. The
+  generated site/index.html is a build artifact and carries no marker.
+applies: editing patrickscript.com copy, changing the landing page visual identity, redeploying the worker, adding sections to the site, reviewing the public surface, regenerating site/index.html after a spec change
+seeded_questions:
+  - "Where does the patrickscript.com source live?"
+  - "How is the PatrickScript landing page deployed?"
+  - "Cloudflare Worker patrickscript-landing"
+  - "patrickscript.com site source"
+  - "PatrickScript public surface"
+  - "How does the patrickscript.com page render inline code?"
+  - "Where is the LLM-authorship lead on patrickscript.com?"
+  - "How is the embedded full spec built into the page?"
+  - "patrickscript.com Full Specification section source"
+@scry.entry.end -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PatrickScript — a language designed by an LLM under two constraints</title>
+<meta name="description" content="PatrickScript is a Turing-complete stack language designed end-to-end by an LLM agent, given only two constraints: a name (PatrickScript) and a two-token alphabet — the word 'patrick' and a single space.">
+<meta property="og:title" content="PatrickScript">
+<meta property="og:description" content="A programming language designed end-to-end by an LLM agent, given only two constraints: a name and a two-token alphabet.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://patrickscript.com/">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='40' fill='%23ffc857' text-anchor='middle'%3Ep%3C/text%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #08090b;
+    --fg: #ededeb;
+    --dim: #6b6b67;
+    --rule: #1c1d21;
+    --accent: #ffc857;
+    --space: #2a2a30;
+    --code-bg: #11131a;
+    --code-border: #2e2f36;
+    --code-fg: #ffe9a8;
+  }
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { background: var(--bg); }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+    font-size: 15px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    padding: 6vh 5vw 12vh;
+    max-width: 880px;
+    margin: 0 auto;
+  }
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover { border-bottom-color: var(--accent); }
+  h1 {
+    font-size: 2.6rem;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    margin-bottom: 0.4rem;
+  }
+  h2 {
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+    margin: 3.5rem 0 1rem;
+    font-weight: 500;
+  }
+  p { margin: 0.9rem 0; }
+  p.lede {
+    font-size: 1.1rem;
+    color: var(--fg);
+    margin-top: 0.4rem;
+    max-width: 64ch;
+  }
+  .meta {
+    color: var(--dim);
+    font-size: 0.78rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 1.4rem;
+  }
+  /* Constraints block — the two givens that bound the LLM's design space. */
+  .constraints {
+    border: 1px solid var(--code-border);
+    background: var(--code-bg);
+    padding: 1.4rem 1.4rem 1.2rem;
+    margin: 2rem 0 1rem;
+  }
+  .constraints h3 {
+    color: var(--dim);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-weight: 500;
+    margin-bottom: 0.9rem;
+  }
+  .constraints ol {
+    list-style: none;
+    padding-left: 0;
+    counter-reset: ck;
+  }
+  .constraints ol li {
+    counter-increment: ck;
+    padding: 0.45rem 0 0.45rem 2.3rem;
+    position: relative;
+    line-height: 1.55;
+  }
+  .constraints ol li::before {
+    content: counter(ck);
+    position: absolute;
+    left: 0;
+    top: 0.45rem;
+    color: var(--accent);
+    font-weight: 600;
+    width: 1.6rem;
+  }
+  .constraints .key {
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-size: 0.74rem;
+    display: block;
+    margin-bottom: 0.15rem;
+  }
+  .alphabet {
+    display: flex;
+    gap: 1.4rem;
+    align-items: stretch;
+    flex-wrap: wrap;
+    margin: 2.4rem 0 0.6rem;
+    padding: 1.6rem 1.4rem;
+    border: 1px solid var(--code-border);
+    background: var(--code-bg);
+  }
+  /* Each token + label is one inseparable unit. Column-stack the chip and
+     its caption so they never reflow apart on a narrow viewport. */
+  .alphabet .pair {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  /* Both tokens render as discrete bordered chips so they read as
+     "this is one token," not as inline prose. Same chrome on both so
+     the SPACE chip has the same visual weight as the WORD chip. */
+  .alphabet .tok {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: var(--code-fg);
+    background: var(--bg);
+    border: 1px solid var(--code-border);
+    padding: 0.5rem 0.9rem;
+    border-radius: 3px;
+    min-height: 2.6rem;
+    box-sizing: border-box;
+  }
+  .alphabet .tok-word { color: var(--accent); }
+  /* The SPACE token must have a visible glyph or it reads as blank. Use
+     the canonical "space" glyph U+2423 (open box) so a viewer sees a
+     concrete mark whose meaning is "space character." */
+  .alphabet .tok-space {
+    min-width: 2.6rem;
+    color: var(--accent);
+    letter-spacing: 0;
+  }
+  .alphabet .label {
+    color: var(--dim);
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+  /* Fenced code block — distinct color + visible border so code reads in
+     isolation from prose. */
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    color: var(--code-fg);
+    padding: 1rem 1.1rem;
+    overflow-x: auto;
+    font-size: 0.86rem;
+    line-height: 1.55;
+    white-space: pre;
+  }
+  pre.raw { color: var(--dim); }
+  pre.raw .p { color: var(--accent); }
+  /* Wrapped raw .ps block. Raw PatrickScript source is long runs of
+     `patrick` and spaces; without wrap it forces horizontal scroll,
+     especially on mobile. `pre-wrap` keeps the spaces (which encode
+     instruction arguments) intact while allowing line breaks; the
+     break-word fallback handles unbroken runs of concatenated
+     `patrickpatrickpatrick...` so they wrap mid-run instead of
+     blowing past the viewport. */
+  pre.ps-wrap {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow-x: visible;
+  }
+  /* Per-program subheading inside the Programs section. Smaller than
+     the section h2s so the progression reads as items under one
+     section, not as a new section per program. */
+  h3.prog {
+    color: var(--code-fg);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin: 2.2rem 0 0.7rem;
+  }
+  h3.prog .desc {
+    color: var(--dim);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-left: 0.5rem;
+  }
+  pre code { font-family: inherit; }
+  .comment { color: var(--dim); }
+  .kw { color: var(--accent); }
+  /* Inline code — distinct color, visible border, padding, and
+     `white-space: pre` so a single ` ` is rendered as a visible box
+     instead of collapsing into prose-colored whitespace. */
+  code {
+    color: var(--code-fg);
+    background: var(--code-bg);
+    border: 1px solid var(--code-border);
+    padding: 0.05em 0.4em;
+    border-radius: 2px;
+    font-size: 0.92em;
+    white-space: pre;
+  }
+  /* Don't double-decorate code that lives inside a pre — pre already has
+     border, bg, padding, color; the inner <code> should inherit. */
+  pre code {
+    color: inherit;
+    background: transparent;
+    border: 0;
+    padding: 0;
+    border-radius: 0;
+    font-size: inherit;
+    white-space: inherit;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.86rem;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.45rem 0.8rem 0.45rem 0;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+  th { color: var(--dim); font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.72rem; }
+  td.arity { color: var(--accent); width: 4rem; }
+  td.mn { width: 7rem; }
+  /* Inline code inside table cells should keep its boxed treatment but
+     stay sized down a touch so the rows don't bloat. */
+  td code, th code { font-size: 0.88em; padding: 0.02em 0.32em; }
+  hr { border: 0; border-top: 1px solid var(--rule); margin: 4.5rem 0 0; }
+  footer {
+    color: var(--dim);
+    font-size: 0.78rem;
+    margin-top: 2rem;
+    letter-spacing: 0.04em;
+  }
+  footer a { color: var(--dim); border-bottom: 1px solid var(--rule); }
+  footer a:hover { color: var(--fg); border-bottom-color: var(--fg); }
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  /* ─── Embedded full spec ──────────────────────────────────────────────
+     The Full Specification section is transcluded at build time from
+     spec/patrickscript.md and lives inside <section class="spec-embed">.
+     The spec's heading levels (h1 → "PatrickScript Language Specification";
+     h2 → "1. Overview", "2. Lexical Model", …; h3, h4 → subsections) need
+     their own treatment so they don't collide with the page's all-caps
+     dim section h2 style. Scoped rules override the global heading styles
+     for everything under .spec-embed only.
+  */
+  .spec-embed {
+    margin-top: 1.5rem;
+    color: var(--fg);
+  }
+  .spec-embed > p:first-of-type { margin-top: 0.4rem; }
+  .spec-embed h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--fg);
+    margin: 2rem 0 0.6rem;
+  }
+  .spec-embed h2 {
+    font-size: 1.15rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--fg);
+    font-weight: 600;
+    margin: 2.6rem 0 0.7rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--rule);
+  }
+  .spec-embed h3 {
+    font-size: 1rem;
+    color: var(--code-fg);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    margin: 1.8rem 0 0.5rem;
+  }
+  .spec-embed h4 {
+    font-size: 0.9rem;
+    color: var(--dim);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 1.4rem 0 0.4rem;
+  }
+  .spec-embed hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 2.4rem 0;
+  }
+  .spec-embed ul, .spec-embed ol {
+    margin: 0.6rem 0 0.6rem 1.4rem;
+    padding-left: 0.4rem;
+  }
+  .spec-embed li { margin: 0.25rem 0; }
+  .spec-embed li > p { margin: 0.3rem 0; }
+  /* Spec code blocks (fenced ``` … ```) and the spec's heavy use of
+     `inline code` should match the page's existing pre/code styling
+     — they already do, because the global rules apply. Just make sure
+     spec <pre> blocks wrap on narrow viewports the same way the rest
+     of the page does. */
+  .spec-embed pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow-x: visible;
+  }
+  .spec-embed table {
+    margin: 1rem 0 1.6rem;
+  }
+  .spec-embed th, .spec-embed td {
+    padding: 0.4rem 0.9rem 0.4rem 0;
+  }
+  .spec-embed blockquote {
+    border-left: 2px solid var(--code-border);
+    padding-left: 1rem;
+    color: var(--dim);
+    margin: 0.9rem 0;
+  }
+  /* Affordance for the in-page jump from Read further → Full
+     Specification. The target is the section h2 of the embedded spec. */
+  .spec-embed:target,
+  #full-specification:target {
+    scroll-margin-top: 1rem;
+  }
+  @media (max-width: 640px) {
+    body { font-size: 14px; padding: 4vh 5vw 10vh; }
+    h1 { font-size: 1.9rem; }
+    .grid2 { grid-template-columns: 1fr; }
+    .alphabet, .constraints { padding: 1.2rem 1rem; }
+    /* Wrap normal code blocks so long URLs (git clone …) don't force
+       horizontal scroll on phones. `.raw` keeps `white-space: pre` so the
+       patrick…patrick truncation stays visually intact. */
+    pre:not(.raw) { white-space: pre-wrap; word-break: break-word; overflow-x: visible; }
+    /* Larger tap targets on the Read-further list (44pt-ish). */
+    ul li a { display: inline-block; padding: 0.55rem 0; }
+    .spec-embed h1 { font-size: 1.3rem; }
+    .spec-embed h2 { font-size: 1.05rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="meta">v1.3.0 &nbsp;·&nbsp; Turing complete &nbsp;·&nbsp; LLM-authored</div>
+  <h1>PatrickScript</h1>
+  <p class="lede">
+    A programming language designed end-to-end by an LLM agent. The
+    originator fixed two things and walked away; everything else — the
+    computational model, the grammar, the semantics, the instruction
+    set, the calling convention, the assembler, the test corpus — is
+    the agent's.
+  </p>
+</header>
+
+<section class="constraints" aria-label="The two constraints the originator gave the agent">
+  <h3>The originator's two constraints</h3>
+  <ol>
+    <li>
+      <span class="key">A name</span>
+      <code>PatrickScript</code>
+    </li>
+    <li>
+      <span class="key">A two-token alphabet</span>
+      The word <code>patrick</code> and a single space <code> </code>. Two tokens, nothing else parses.
+    </li>
+  </ol>
+</section>
+
+<p style="color:var(--dim); font-size:0.86rem; margin-top:0.4rem;">
+  The agent took those two constraints and decided everything else.
+  Design questions were not routed back. Forks were resolved in the spec.
+  If a choice looks strange, it was a coherent choice under the
+  constraint, not an oversight.
+</p>
+
+<h2>The alphabet</h2>
+<div class="alphabet" role="list" aria-label="The two tokens of PatrickScript">
+  <div class="pair" role="listitem">
+    <span class="tok tok-word">patrick</span>
+    <span class="label">word</span>
+  </div>
+  <div class="pair" role="listitem">
+    <span class="tok tok-space" aria-label="a single space character">␣</span>
+    <span class="label">space</span>
+  </div>
+</div>
+<p style="color:var(--dim); font-size:0.86rem;">That is the whole lexicon. A bare <code> </code> is a valid token; so is <code>patrick</code>. Nothing else parses.</p>
+
+<h2>How it reads</h2>
+<p>A program is a sequence of <em>instructions</em>. Each instruction is two
+numbers, both expressed as counts:</p>
+<ul style="list-style:none; padding-left:0; margin:0.6rem 0;">
+  <li>— <strong style="color:var(--accent)">word arity</strong>: how many consecutive <code>patrick</code> tokens you wrote. This selects the opcode.</li>
+  <li>— <strong style="color:var(--accent)">gap width</strong>: how many consecutive spaces follow. This is the opcode's immediate argument.</li>
+</ul>
+<p>So <code>patrick   </code> (one <code>patrick</code>, three spaces) is
+<code>PUSH 3</code>. <code>patrickpatrick </code> (two <code>patrick</code>s, one space) is
+<code>POP</code>. There is no other structural information in the source.</p>
+
+<h2>Hello, World</h2>
+<p style="color:var(--dim); font-size:0.86rem;">Written in the assembly mnemonic, then compiled to the source the parser actually sees.</p>
+
+<div class="grid2">
+<pre><code><span class="comment">; hello-world.psa</span>
+<span class="kw">.string</span> <span style="color:#9fd0a0">"Hello, World!\n"</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrick</span>
+<span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrick</span>
+<span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrick</span>
+<span class="p">…</span></pre>
+</div>
+<p style="color:var(--dim); font-size:0.82rem;">The right column is the literal <code>.ps</code>
+file. Each <code>PUSH n</code> is one <code>patrick</code> followed by <code>n</code>
+spaces. <code>OUTCHAR</code> is eight <code>patrick</code>s and one space. The full
+program is a few kilobytes of <code>patrick</code> and whitespace.</p>
+
+<h2>Programs</h2>
+<p style="color:var(--dim); font-size:0.86rem;">Three programs in full. The left column is the
+assembler mnemonic; the right column is the literal <code>.ps</code> source the parser sees — the
+same characters as the left, expanded to <code>patrick</code> tokens and spaces, wrapped to fit
+the page. Every contiguous run of <code>patrick</code> is one instruction's word-arity; the
+spaces after it are its gap-encoded argument.</p>
+
+<h3 class="prog">add <span class="desc">— push 3, push 5, add, print → 8</span></h3>
+<div class="grid2">
+<pre><code><span class="comment">; add.psa</span>
+<span class="kw">PUSH</span> 3
+<span class="kw">PUSH</span> 5
+<span class="kw">ADD</span>
+<span class="kw">OUTNUM</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrick</span>    <span class="p">patrick</span>      <span class="p">patrickpatrickpatrick</span> <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>    <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span></pre>
+</div>
+
+<h3 class="prog">square <span class="desc">— read n from stdin, print n²</span></h3>
+<div class="grid2">
+<pre><code><span class="comment">; square.psa — uses PICK 0 (non-destructive top-of-stack copy)</span>
+<span class="kw">INNUM</span>       <span class="comment">; read n</span>
+<span class="kw">PICK</span> 0      <span class="comment">; copy top: [n, n]</span>
+<span class="kw">MUL</span>         <span class="comment">; [n²]</span>
+<span class="kw">OUTNUM</span>
+<span class="kw">PUSH</span> 10
+<span class="kw">OUTCHAR</span>     <span class="comment">; newline</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>   <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> <span class="p">patrickpatrickpatrick</span>   <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>    <span class="p">patrick</span>           <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> </pre>
+</div>
+
+<h3 class="prog">echo <span class="desc">— copy stdin to stdout, halt on EOF</span></h3>
+<div class="grid2">
+<pre><code><span class="comment">; echo.psa — loop, read a byte, write it, until EOF (-1)</span>
+loop:
+<span class="kw">INCHAR</span>        <span class="comment">; read byte (-1 on EOF)</span>
+<span class="kw">DUP</span>
+<span class="kw">PUSH</span> 1
+<span class="kw">ADD</span>           <span class="comment">; -1 + 1 = 0 → EOF</span>
+<span class="kw">JUMPZ</span> done
+<span class="kw">OUTCHAR</span>
+<span class="kw">JUMP</span> loop
+done:
+<span class="kw">POP</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> <span class="p">patrickpatrick</span>  <span class="p">patrick</span>  <span class="p">patrickpatrickpatrick</span> <span class="p">patrickpatrickpatrickpatrickpatrickpatrick</span>        <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrickpatrickpatrickpatrickpatrick</span> <span class="p">patrickpatrick</span> <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> </pre>
+</div>
+
+<p style="color:var(--dim); font-size:0.82rem;">The full corpus is on
+<a href="https://github.com/prmichaelsen/patrick-script/tree/main/corpus">GitHub</a> — fizzbuzz, recursive factorial,
+rot13, and forty-seven others.</p>
+
+<h2>Instruction set, abridged</h2>
+<table>
+  <thead><tr><th>Arity</th><th>Mnemonic</th><th>Effect</th></tr></thead>
+  <tbody>
+    <tr><td class="arity">1</td><td class="mn">PUSH n</td><td>Push integer n.</td></tr>
+    <tr><td class="arity">2</td><td class="mn">POP / arith</td><td>Stack ops, ADD/SUB/MUL/DIV/MOD/NEG via gap_arg.</td></tr>
+    <tr><td class="arity">3</td><td class="mn">EQ / LT / GT / bitwise</td><td>Comparison and AND/OR/XOR/NOT.</td></tr>
+    <tr><td class="arity">4</td><td class="mn">JUMP n</td><td>Jump to instruction index n.</td></tr>
+    <tr><td class="arity">5</td><td class="mn">JUMPZ n</td><td>Jump if top of stack is zero.</td></tr>
+    <tr><td class="arity">6</td><td class="mn">JUMPNZ n</td><td>Jump if non-zero.</td></tr>
+    <tr><td class="arity">7</td><td class="mn">INCHAR / OUTCHAR / INNUM / OUTNUM</td><td>Byte and decimal I/O.</td></tr>
+    <tr><td class="arity">8</td><td class="mn">LOAD / STORE</td><td>Integer-addressed memory.</td></tr>
+    <tr><td class="arity">9</td><td class="mn">HALT</td><td>Stop execution.</td></tr>
+    <tr><td class="arity">11</td><td class="mn">CALL n</td><td>Push return address; jump to n.</td></tr>
+    <tr><td class="arity">12</td><td class="mn">RET</td><td>Pop return address; jump there.</td></tr>
+    <tr><td class="arity">13</td><td class="mn">PUSHN n</td><td>Push −n (single-instruction negative literal).</td></tr>
+    <tr><td class="arity">14</td><td class="mn">PICK n</td><td>Copy element n positions from top of stack.</td></tr>
+  </tbody>
+</table>
+<p style="color:var(--dim); font-size:0.82rem;">Turing-completeness comes from <code>JUMPZ</code>/<code>JUMPNZ</code> plus unbounded
+integer-addressed memory. Subroutines and recursion via <code>CALL</code>/<code>RET</code>.
+The complete instruction set with formal semantics is in the
+<a href="#full-specification">Full specification</a> below.</p>
+
+<h2>Install</h2>
+<pre><code><span class="comment"># clone the reference implementation</span>
+git clone git@github.com:prmichaelsen/patrick-script.git
+cd patrick-script
+
+<span class="comment"># run a program</span>
+python3 src/patrickscript/ps.py examples/hello-world.ps
+
+<span class="comment"># or write in the assembler and compile</span>
+python3 src/patrickscript/psa.py examples/hello-world.psa &gt; hello.ps
+python3 src/patrickscript/ps.py hello.ps</code></pre>
+<p style="color:var(--dim); font-size:0.86rem;">Reference interpreter and assembler are pure-stdlib Python.
+PyPI publish is queued (<code>pip install patrickscript</code> once
+the package goes up).</p>
+
+<h2>Read further</h2>
+<ul style="list-style:none; padding-left:0;">
+  <li>— <a href="#full-specification">Full specification (inlined below)</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script">Reference implementation on GitHub</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/blob/main/spec/patrickscript.md">Specification source (Markdown)</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/tree/main/examples">Examples: factorial, fizzbuzz, rot13, fibonacci, echo</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/tree/main/corpus">Conformance corpus (50 tests)</a></li>
+</ul>
+
+<h2 id="full-specification">Full specification</h2>
+<p style="color:var(--dim); font-size:0.86rem;">
+Transcluded directly from
+<a href="https://github.com/prmichaelsen/patrick-script/blob/main/spec/patrickscript.md"><code>spec/patrickscript.md</code></a>
+in the reference repo at build time — the canonical source, not a copy.
+</p>
+
+<!--__PATRICKSCRIPT_SPEC_HTML__-->
+
+<hr>
+<footer>
+  <p>Owned by the <code>patrick-script-worker</code> track in the <a href="https://github.com/prmichaelsen">reflection</a> substrate.</p>
+  <p style="margin-top:0.4rem;">v1.3.0 &nbsp;·&nbsp; 50/50 corpus &nbsp;·&nbsp; 12/12 disasm round-trips &nbsp;·&nbsp; MIT</p>
+</footer>
+
+</body>
+</html>

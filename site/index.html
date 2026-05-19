@@ -1,4 +1,8 @@
 <!doctype html>
+<!-- GENERATED FILE — do not edit by hand.
+     Source: site/index.html.template + spec/patrickscript.md
+     Build : uv run site/build_site.py
+-->
 <!-- @scry.entry
 id: code.patrickscript-landing-html~8fdeae3c
 kind: code
@@ -15,26 +19,37 @@ tags:
   - "cloudflare-worker"
   - "topic:public-surface"
   - "public-surface"
+  - "topic:template"
+  - "template"
+  - "topic:transclusion"
+  - "transclusion"
 summary: >
-  PatrickScript landing page at patrickscript.com — single static HTML
-  file served by a Cloudflare Worker (worker name patrickscript-landing,
-  routes patrickscript.com/* and www.patrickscript.com/*). Self-contained
-  (no external CSS/JS/fonts). Monospace throughout. Leads with the
-  LLM-authorship story: the originator fixed two constraints (a name +
-  the two-token alphabet) and an LLM agent designed everything else.
-  Covers: the two-token alphabet, the word-arity/gap-width encoding,
-  Hello World in both .psa assembly and the raw .ps form, ISA abridged,
-  install. Code-renderer style: distinct warm color + visible border +
-  padding so a bare ` ` (space) token is readable in isolation.
-  Also: PatrickScript landing page, patrickscript.com, CF Worker
-  inlined HTML, two-token language site, marketing surface, LLM-authored
-  language, provenance lead, code renderer border, monospace brutalism,
-  single-file site, no JS.
+  PatrickScript landing page TEMPLATE for patrickscript.com — source of
+  truth, paired with site/build_site.py and the canonical spec at
+  spec/patrickscript.md. The build script transcludes the spec into the
+  PATRICKSCRIPT-SPEC-HTML placeholder under the Full Specification section
+  and writes site/index.html (generated, served by the CF Worker
+  patrickscript-landing, routes patrickscript.com/* and
+  www.patrickscript.com/*). Self-contained (no external CSS/JS/fonts).
+  Monospace throughout. Leads with the LLM-authorship story: the
+  originator fixed two constraints (a name + the two-token alphabet)
+  and an LLM agent designed everything else. Covers: the two-token
+  alphabet, the word-arity/gap-width encoding, Hello World in both .psa
+  assembly and the raw .ps form, three full programs (add/square/echo),
+  ISA abridged, install, read-further links, and the full spec inlined
+  from source. Code-renderer style: distinct warm color + visible border
+  + padding so a bare ` ` (space) token is readable in isolation.
+  Also: PatrickScript landing page template, patrickscript.com, CF
+  Worker inlined HTML, two-token language site, marketing surface,
+  LLM-authored language, provenance lead, code renderer border,
+  monospace brutalism, single-file site, no JS, full spec inlined,
+  build-time transclusion, SPEC_HTML placeholder.
 rationale: >
-  Without this marker the public landing page is not discoverable as
+  Without this template the public landing page is not discoverable as
   a project artifact via scry meaning-search; future wakes that need
-  to update copy or visual identity won't know it exists.
-applies: editing patrickscript.com copy, changing the landing page visual identity, redeploying the worker, adding sections to the site, reviewing the public surface
+  to update copy or visual identity won't know where to edit. The
+  generated site/index.html is a build artifact and carries no marker.
+applies: editing patrickscript.com copy, changing the landing page visual identity, redeploying the worker, adding sections to the site, reviewing the public surface, regenerating site/index.html after a spec change
 seeded_questions:
   - "Where does the patrickscript.com source live?"
   - "How is the PatrickScript landing page deployed?"
@@ -43,6 +58,8 @@ seeded_questions:
   - "PatrickScript public surface"
   - "How does the patrickscript.com page render inline code?"
   - "Where is the LLM-authorship lead on patrickscript.com?"
+  - "How is the embedded full spec built into the page?"
+  - "patrickscript.com Full Specification section source"
 @scry.entry.end -->
 <html lang="en">
 <head>
@@ -305,6 +322,93 @@ seeded_questions:
     grid-template-columns: 1fr 1fr;
     gap: 1rem;
   }
+  /* ─── Embedded full spec ──────────────────────────────────────────────
+     The Full Specification section is transcluded at build time from
+     spec/patrickscript.md and lives inside <section class="spec-embed">.
+     The spec's heading levels (h1 → "PatrickScript Language Specification";
+     h2 → "1. Overview", "2. Lexical Model", …; h3, h4 → subsections) need
+     their own treatment so they don't collide with the page's all-caps
+     dim section h2 style. Scoped rules override the global heading styles
+     for everything under .spec-embed only.
+  */
+  .spec-embed {
+    margin-top: 1.5rem;
+    color: var(--fg);
+  }
+  .spec-embed > p:first-of-type { margin-top: 0.4rem; }
+  .spec-embed h1 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 0;
+    color: var(--fg);
+    margin: 2rem 0 0.6rem;
+  }
+  .spec-embed h2 {
+    font-size: 1.15rem;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--fg);
+    font-weight: 600;
+    margin: 2.6rem 0 0.7rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid var(--rule);
+  }
+  .spec-embed h3 {
+    font-size: 1rem;
+    color: var(--code-fg);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: none;
+    margin: 1.8rem 0 0.5rem;
+  }
+  .spec-embed h4 {
+    font-size: 0.9rem;
+    color: var(--dim);
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 1.4rem 0 0.4rem;
+  }
+  .spec-embed hr {
+    border: 0;
+    border-top: 1px solid var(--rule);
+    margin: 2.4rem 0;
+  }
+  .spec-embed ul, .spec-embed ol {
+    margin: 0.6rem 0 0.6rem 1.4rem;
+    padding-left: 0.4rem;
+  }
+  .spec-embed li { margin: 0.25rem 0; }
+  .spec-embed li > p { margin: 0.3rem 0; }
+  /* Spec code blocks (fenced ``` … ```) and the spec's heavy use of
+     `inline code` should match the page's existing pre/code styling
+     — they already do, because the global rules apply. Just make sure
+     spec <pre> blocks wrap on narrow viewports the same way the rest
+     of the page does. */
+  .spec-embed pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow-x: visible;
+  }
+  .spec-embed table {
+    margin: 1rem 0 1.6rem;
+  }
+  .spec-embed th, .spec-embed td {
+    padding: 0.4rem 0.9rem 0.4rem 0;
+  }
+  .spec-embed blockquote {
+    border-left: 2px solid var(--code-border);
+    padding-left: 1rem;
+    color: var(--dim);
+    margin: 0.9rem 0;
+  }
+  /* Affordance for the in-page jump from Read further → Full
+     Specification. The target is the section h2 of the embedded spec. */
+  .spec-embed:target,
+  #full-specification:target {
+    scroll-margin-top: 1rem;
+  }
   @media (max-width: 640px) {
     body { font-size: 14px; padding: 4vh 5vw 10vh; }
     h1 { font-size: 1.9rem; }
@@ -316,6 +420,8 @@ seeded_questions:
     pre:not(.raw) { white-space: pre-wrap; word-break: break-word; overflow-x: visible; }
     /* Larger tap targets on the Read-further list (44pt-ish). */
     ul li a { display: inline-block; padding: 0.55rem 0; }
+    .spec-embed h1 { font-size: 1.3rem; }
+    .spec-embed h2 { font-size: 1.05rem; }
   }
 </style>
 </head>
@@ -467,7 +573,9 @@ rot13, and forty-seven others.</p>
   </tbody>
 </table>
 <p style="color:var(--dim); font-size:0.82rem;">Turing-completeness comes from <code>JUMPZ</code>/<code>JUMPNZ</code> plus unbounded
-integer-addressed memory. Subroutines and recursion via <code>CALL</code>/<code>RET</code>.</p>
+integer-addressed memory. Subroutines and recursion via <code>CALL</code>/<code>RET</code>.
+The complete instruction set with formal semantics is in the
+<a href="#full-specification">Full specification</a> below.</p>
 
 <h2>Install</h2>
 <pre><code><span class="comment"># clone the reference implementation</span>
@@ -486,11 +594,1004 @@ the package goes up).</p>
 
 <h2>Read further</h2>
 <ul style="list-style:none; padding-left:0;">
+  <li>— <a href="#full-specification">Full specification (inlined below)</a></li>
   <li>— <a href="https://github.com/prmichaelsen/patrick-script">Reference implementation on GitHub</a></li>
-  <li>— <a href="https://github.com/prmichaelsen/patrick-script/blob/main/spec/patrickscript.md">Full specification</a></li>
+  <li>— <a href="https://github.com/prmichaelsen/patrick-script/blob/main/spec/patrickscript.md">Specification source (Markdown)</a></li>
   <li>— <a href="https://github.com/prmichaelsen/patrick-script/tree/main/examples">Examples: factorial, fizzbuzz, rot13, fibonacci, echo</a></li>
   <li>— <a href="https://github.com/prmichaelsen/patrick-script/tree/main/corpus">Conformance corpus (50 tests)</a></li>
 </ul>
+
+<h2 id="full-specification">Full specification</h2>
+<p style="color:var(--dim); font-size:0.86rem;">
+Transcluded directly from
+<a href="https://github.com/prmichaelsen/patrick-script/blob/main/spec/patrickscript.md"><code>spec/patrickscript.md</code></a>
+in the reference repo at build time — the canonical source, not a copy.
+</p>
+
+<section class="spec-embed" aria-label="PatrickScript v1.3.0 — full specification">
+<h1>PatrickScript Language Specification</h1>
+<p><strong>Version</strong>: 1.3.0
+<strong>Status</strong>: active
+<strong>Authored by</strong>: patrick-script-worker track, 2026-05-15</p>
+<hr>
+<h2>1. Overview</h2>
+<p>PatrickScript is a Turing-complete, stack-based programming language whose
+entire design — computational model, grammar, semantics, tooling — was
+authored by an LLM. The only human-fixed inputs are:</p>
+<ul>
+<li><strong>The name</strong>: PatrickScript</li>
+<li><strong>The two lexical tokens</strong>: <code>patrick</code> (the literal string) and <code></code> (a
+  single space, U+0020)</li>
+</ul>
+<p>Every other property of the language is a decision made by the
+<code>patrick-script-worker</code> track. No design question is deferred to the
+originator.</p>
+<p>PatrickScript programs are sequences of these two tokens. Structure is
+encoded in the <em>count</em> of consecutive identical tokens: how many
+<code>patrick</code>s in a row, and how many spaces in a row. These counts carry
+all meaning.</p>
+<hr>
+<h2>2. Lexical Model</h2>
+<p>A PatrickScript source file is a sequence of bytes drawn exclusively from
+two token types:</p>
+<table>
+<thead>
+<tr>
+<th>Token</th>
+<th>Representation</th>
+<th>Unicode</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WORD</td>
+<td>The string <code>patrick</code></td>
+<td>7 ASCII bytes</td>
+</tr>
+<tr>
+<td>SP</td>
+<td>A single space character</td>
+<td>U+0020</td>
+</tr>
+</tbody>
+</table>
+<p>No other bytes are legal in a PatrickScript source. Specifically:
+- Newlines, tabs, carriage returns, and all other whitespace are illegal.
+- Any byte sequence other than <code>patrick</code> or <code></code> is illegal.
+- An empty file (zero bytes) is a valid program (it halts immediately).</p>
+<h3>2.1 Tokens vs. Characters</h3>
+<p>The unit of tokenization is not the character but the token as defined
+above. The string <code>patrick</code> is a single WORD token, not seven character
+tokens. The string <code>patrick</code> is illegal (not a WORD token and not a SP
+token).</p>
+<hr>
+<h2>3. Syntactic Structure</h2>
+<p>Tokens are organized into two syntactic constructs:</p>
+<p><strong>Word</strong>: a maximal contiguous run of WORD tokens. The <strong>arity</strong> of a
+word is its length in WORD tokens.</p>
+<p><strong>Gap</strong>: a maximal contiguous run of SP tokens. The <strong>width</strong> of a gap
+is its length in SP tokens.</p>
+<p>A PatrickScript program is a sequence of zero or more <strong>instructions</strong>.
+Each instruction is a (word, gap) pair: a word followed by a gap. The
+final instruction in a program may omit its trailing gap; when it does,
+the gap is treated as having width 1.</p>
+<h3>Formal Grammar</h3>
+<pre><code>program     ::= instruction* trailing?
+instruction ::= word gap
+trailing    ::= word
+word        ::= 'patrick'+
+gap         ::= ' '+
+</code></pre>
+<p>Since words and gaps are each maximal runs of their respective token,
+they alternate strictly: no two words are adjacent (they would fuse into
+one word), and no two gaps are adjacent (they would fuse into one gap).</p>
+<h3>3.1 Instruction Encoding</h3>
+<p>Each instruction encodes:</p>
+<ul>
+<li><strong>Opcode</strong>: selected by (word_arity, gap_arg) together, where
+  <code>gap_arg = gap_width - 1</code>. The gap always has width ≥ 1 (by grammar),
+  so <code>gap_arg ≥ 0</code>. For a trailing word with no gap, <code>gap_arg = 0</code>.</li>
+<li><strong>Argument</strong>: the <code>gap_arg</code> value doubles as the numeric immediate
+  argument for instructions that take one (e.g., PUSH, JUMP).</li>
+</ul>
+<hr>
+<h2>4. Machine Model</h2>
+<p>A PatrickScript machine has the following state:</p>
+<ul>
+<li><strong>Value stack</strong> (S): a LIFO stack of arbitrary integers (positive,
+  negative, or zero). Initially empty.</li>
+<li><strong>Memory</strong> (M): a map from integer addresses to integer values.
+  <code>M[addr]</code> is 0 for any address not yet written. The address space is
+  unbounded in both directions.</li>
+<li><strong>Instruction pointer</strong> (IP): a zero-based index into the instruction
+  sequence. Starts at 0.</li>
+<li><strong>Program</strong>: the compiled list of (arity, gap_arg) pairs, indexed
+  0..N-1.</li>
+<li><strong>I/O</strong>: standard input and standard output, byte-oriented.</li>
+</ul>
+<p>Execution proceeds by fetching the instruction at IP, executing it,
+advancing IP, and repeating until HALT or an error condition.</p>
+<hr>
+<h2>5. Instruction Set</h2>
+<h3>Notation</h3>
+<p>Stack effects use the convention <code>before → after</code>, where items are
+listed left-to-right with the top of stack at the right. For example,
+<code>a b → a+b</code> means: before execution, b is on top with a below it;
+after execution, their sum is on top.</p>
+<p><code>n</code> denotes the <code>gap_arg</code> value of the current instruction (the
+immediate integer argument).</p>
+<h3>5.1 Stack Manipulation</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>n</td>
+<td>PUSH</td>
+<td>→ n</td>
+<td>Push the integer n onto the stack</td>
+</tr>
+<tr>
+<td>2</td>
+<td>0</td>
+<td>POP</td>
+<td>a →</td>
+<td>Discard the top of the stack</td>
+</tr>
+<tr>
+<td>2</td>
+<td>1</td>
+<td>DUP</td>
+<td>a → a a</td>
+<td>Duplicate the top of the stack</td>
+</tr>
+<tr>
+<td>2</td>
+<td>2</td>
+<td>SWAP</td>
+<td>a b → b a</td>
+<td>Swap the top two elements</td>
+</tr>
+<tr>
+<td>2</td>
+<td>3</td>
+<td>ROT</td>
+<td>a b c → b c a</td>
+<td>Rotate: move third element to top</td>
+</tr>
+</tbody>
+</table>
+<h3>5.2 Arithmetic</h3>
+<p>All arithmetic pops two values unless noted. The operand order is: pop b
+(top), pop a (below), compute and push result.</p>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>3</td>
+<td>0</td>
+<td>ADD</td>
+<td>a b → a+b</td>
+<td>Integer addition</td>
+</tr>
+<tr>
+<td>3</td>
+<td>1</td>
+<td>SUB</td>
+<td>a b → a-b</td>
+<td>Integer subtraction (a minus b)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>2</td>
+<td>MUL</td>
+<td>a b → a*b</td>
+<td>Integer multiplication</td>
+</tr>
+<tr>
+<td>3</td>
+<td>3</td>
+<td>DIV</td>
+<td>a b → a÷b</td>
+<td>Integer division (floor), b divides a</td>
+</tr>
+<tr>
+<td>3</td>
+<td>4</td>
+<td>MOD</td>
+<td>a b → a mod b</td>
+<td>Integer remainder (sign follows a)</td>
+</tr>
+<tr>
+<td>3</td>
+<td>5</td>
+<td>NEG</td>
+<td>a → -a</td>
+<td>Negate (unary; pops one, not two)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Negative integer literals</strong>: PUSH encodes its argument as <code>gap_arg</code>,
+which is always ≥ 0. There is no literal syntax for negative integers.
+To push −n, push n then negate: <code>PUSH n</code> followed by <code>NEG</code>. The result
+is −n on the stack. The assembler supports this directly via two lines.</p>
+<p><strong>Division and modulo</strong>: <code>a</code> is the dividend (below in stack), <code>b</code> is
+the divisor (top of stack). <code>DIV</code> computes <code>floor(a / b)</code>. <code>MOD</code>
+computes <code>a - b * floor(a / b)</code>. Division by zero is a runtime error.</p>
+<h3>5.3 Comparison</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4</td>
+<td>0</td>
+<td>EQ</td>
+<td>a b → (a==b)</td>
+<td>1 if equal, 0 otherwise</td>
+</tr>
+<tr>
+<td>4</td>
+<td>1</td>
+<td>LT</td>
+<td>a b → (a&lt;b)</td>
+<td>1 if a &lt; b, 0 otherwise</td>
+</tr>
+<tr>
+<td>4</td>
+<td>2</td>
+<td>GT</td>
+<td>a b → (a&gt;b)</td>
+<td>1 if a &gt; b, 0 otherwise</td>
+</tr>
+<tr>
+<td>4</td>
+<td>3</td>
+<td>AND</td>
+<td>a b → a&amp;b</td>
+<td>Bitwise AND</td>
+</tr>
+<tr>
+<td>4</td>
+<td>4</td>
+<td>OR</td>
+<td>a b → a|b</td>
+<td>Bitwise OR</td>
+</tr>
+<tr>
+<td>4</td>
+<td>5</td>
+<td>XOR</td>
+<td>a b → a^b</td>
+<td>Bitwise XOR</td>
+</tr>
+<tr>
+<td>4</td>
+<td>6</td>
+<td>NOT</td>
+<td>a → ~a</td>
+<td>Bitwise NOT (ones' complement)</td>
+</tr>
+</tbody>
+</table>
+<p>Comparison operand order: pop b (top), pop a (below), push result.</p>
+<h3>5.4 Control Flow</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5</td>
+<td>n</td>
+<td>JUMP</td>
+<td>—</td>
+<td>Set IP to n (unconditional)</td>
+</tr>
+<tr>
+<td>6</td>
+<td>n</td>
+<td>JUMPZ</td>
+<td>a →</td>
+<td>Pop a; if a == 0, set IP to n</td>
+</tr>
+<tr>
+<td>7</td>
+<td>n</td>
+<td>JUMPNZ</td>
+<td>a →</td>
+<td>Pop a; if a != 0, set IP to n</td>
+</tr>
+</tbody>
+</table>
+<p>JUMP and JUMPZ set the IP to the instruction at 0-based index n. After
+a jump, execution continues from the new IP (no automatic increment for
+that step). If n is out of bounds, it is a runtime error.</p>
+<p>JUMPZ and JUMPNZ always pop the condition value, whether or not the
+branch is taken.</p>
+<h3>5.5 Input / Output</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>8</td>
+<td>0</td>
+<td>INCHAR</td>
+<td>→ c</td>
+<td>Read one byte from stdin; push its value (0–255). Push -1 on EOF.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>1</td>
+<td>OUTCHAR</td>
+<td>c →</td>
+<td>Pop c; write <code>c mod 256</code> as one byte to stdout</td>
+</tr>
+<tr>
+<td>8</td>
+<td>2</td>
+<td>INNUM</td>
+<td>→ n</td>
+<td>Read one decimal integer from stdin (leading whitespace ignored); push n. Push -1 on EOF or parse error.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>3</td>
+<td>OUTNUM</td>
+<td>n →</td>
+<td>Pop n; write the decimal representation of n to stdout, followed by a newline</td>
+</tr>
+</tbody>
+</table>
+<h3>5.6 Memory</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9</td>
+<td>0</td>
+<td>LOAD</td>
+<td>addr → val</td>
+<td>Pop addr; push M[addr]</td>
+</tr>
+<tr>
+<td>9</td>
+<td>1</td>
+<td>STORE</td>
+<td>val addr →</td>
+<td>Pop addr; pop val; set M[addr] = val</td>
+</tr>
+</tbody>
+</table>
+<h3>5.7 Halt</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>10</td>
+<td>any</td>
+<td>HALT</td>
+<td>—</td>
+<td>Terminate the program with exit code 0</td>
+</tr>
+</tbody>
+</table>
+<h3>5.8 Subroutines (v1.1.0)</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>11</td>
+<td>n</td>
+<td>CALL</td>
+<td>→ ret</td>
+<td>Push (IP+1); jump to instruction n</td>
+</tr>
+<tr>
+<td>12</td>
+<td>any</td>
+<td>RET</td>
+<td>ret →</td>
+<td>Pop ret; jump to instruction ret</td>
+</tr>
+</tbody>
+</table>
+<p><strong>CALL n</strong> saves the return address (the index of the instruction
+immediately following CALL) by pushing it onto the value stack, then
+sets IP to n. Execution continues from instruction n.</p>
+<p><strong>RET</strong> pops the top of the value stack as a return address and sets IP
+to it. If the stack is empty when RET executes, it is a stack underflow
+error. If the popped value is not a valid instruction index, it is a
+jump-out-of-bounds error.</p>
+<p>The gap_arg of CALL is the jump target (like JUMP). The gap_arg of RET
+is ignored (like HALT).</p>
+<p>Subroutines can be nested: each CALL pushes a return address, and each
+matching RET pops it. Recursive calls are legal but may exhaust stack
+space in practice.</p>
+<h3>5.9 Negative Push (v1.2.0)</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>13</td>
+<td>n</td>
+<td>PUSHN</td>
+<td>→ -n</td>
+<td>Push the integer −n onto the stack</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PUSHN n</strong> pushes the negation of its immediate argument. The argument
+n is encoded as gap_arg (≥ 0), so the pushed value is −n (≤ 0). This
+provides single-instruction access to negative constants, which PUSH
+alone cannot represent (since gap_arg ≥ 0).</p>
+<p>Examples: <code>PUSHN 5</code> pushes −5. <code>PUSHN 0</code> pushes 0 (same as <code>PUSH 0</code>).</p>
+<p>The two-instruction idiom <code>PUSH n / NEG</code> remains valid and equivalent.
+PUSHN is a convenience instruction, not a new capability.</p>
+<h3>5.10 Stack Copy (v1.3.0)</h3>
+<table>
+<thead>
+<tr>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Mnemonic</th>
+<th>Stack effect</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>14</td>
+<td>n</td>
+<td>PICK</td>
+<td>a[n]..a[1] a[0] → ... a[0] a[n]</td>
+<td>Copy the element n positions from top</td>
+</tr>
+</tbody>
+</table>
+<p><strong>PICK n</strong> copies the element at depth n (0-indexed from the top of the
+stack) and pushes it onto the top. The original element is not removed.</p>
+<ul>
+<li><code>PICK 0</code> duplicates the top element (equivalent to DUP).</li>
+<li><code>PICK 1</code> copies the second element from the top.</li>
+<li><code>PICK n</code> where n ≥ stack depth is a stack underflow runtime error.</li>
+</ul>
+<p>PICK is useful for accessing subroutine arguments buried below return
+addresses, and for implementing n-ary operations that need a value
+without consuming it.</p>
+<p>Examples:
+- Stack <code>[1 2 3]</code> (3 on top): <code>PICK 0</code> → <code>[1 2 3 3]</code>
+- Stack <code>[1 2 3]</code>: <code>PICK 2</code> → <code>[1 2 3 1]</code></p>
+<h3>5.11 Reserved and Illegal Instructions</h3>
+<p>Arities 15 and above are reserved for future versions. An instruction
+with arity ≥ 15 is a runtime error in v1.3.0.</p>
+<p>There is no instruction with arity 0 (a zero-length word is not
+grammatically possible).</p>
+<hr>
+<h2>6. Error Conditions</h2>
+<p>The following conditions are runtime errors. A conforming interpreter
+MUST terminate with a non-zero exit code and SHOULD emit a diagnostic
+message to stderr.</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Stack underflow</td>
+<td>POP on empty stack; PICK n where n ≥ depth</td>
+</tr>
+<tr>
+<td>Division by zero</td>
+<td>DIV or MOD with 0 on top</td>
+</tr>
+<tr>
+<td>Jump out of bounds</td>
+<td>JUMP n where n ≥ program length</td>
+</tr>
+<tr>
+<td>Illegal instruction</td>
+<td>word arity ≥ 15</td>
+</tr>
+<tr>
+<td>Illegal gap_arg for opcode</td>
+<td>gap_arg outside defined range for a given arity</td>
+</tr>
+</tbody>
+</table>
+<p>For arity 2, gap_arg values 4 and above are illegal.
+For arity 3, gap_arg values 6 and above are illegal.
+For arity 4, gap_arg values 7 and above are illegal.
+For arities 5, 6, 7, any gap_arg is legal (it is the target or unused).
+For arity 8, gap_arg values 4 and above are illegal.
+For arity 9, gap_arg values 2 and above are illegal.
+For arity 10 (HALT), all gap_arg values are legal.
+For arity 11 (CALL), any gap_arg is legal (it is the target address).
+For arity 12 (RET), all gap_arg values are legal (the gap_arg is ignored).
+For arity 13 (PUSHN), any gap_arg is legal (it is the value to negate).
+For arity 14 (PICK), any gap_arg is legal (it is the stack depth index),
+  but a PICK n where n ≥ stack depth is a stack underflow runtime error.</p>
+<p><strong>Lexical errors</strong> (illegal characters in source) are parse-time errors
+and MUST cause the interpreter to exit with a non-zero exit code before
+any execution.</p>
+<hr>
+<h2>7. Encoding Reference</h2>
+<p>An instruction is written as:</p>
+<pre><code>('patrick' × arity) (' ' × (gap_arg + 1))
+</code></pre>
+<p>except the last instruction in a program, which may omit trailing spaces
+(treated as gap_arg = 0).</p>
+<h3>7.1 Encoding Examples</h3>
+<p>Within a word, <code>patrick</code> tokens are concatenated with no separating characters.
+A word of arity n is the string <code>patrick</code> repeated n times. The gap follows
+immediately after the last <code>patrick</code> of the word.</p>
+<p>Below, <code>p</code> stands for <code>patrick</code> (7 characters) and <code>·</code> for a space:</p>
+<table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th>Arity</th>
+<th>gap_arg</th>
+<th>Source (p=<code>patrick</code>, ·=space)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PUSH 0</td>
+<td>1</td>
+<td>0</td>
+<td><code>p·</code></td>
+</tr>
+<tr>
+<td>PUSH 5</td>
+<td>1</td>
+<td>5</td>
+<td><code>p······</code></td>
+</tr>
+<tr>
+<td>POP</td>
+<td>2</td>
+<td>0</td>
+<td><code>pp·</code></td>
+</tr>
+<tr>
+<td>DUP</td>
+<td>2</td>
+<td>1</td>
+<td><code>pp··</code></td>
+</tr>
+<tr>
+<td>SWAP</td>
+<td>2</td>
+<td>2</td>
+<td><code>pp···</code></td>
+</tr>
+<tr>
+<td>ADD</td>
+<td>3</td>
+<td>0</td>
+<td><code>ppp·</code></td>
+</tr>
+<tr>
+<td>SUB</td>
+<td>3</td>
+<td>1</td>
+<td><code>ppp··</code></td>
+</tr>
+<tr>
+<td>EQ</td>
+<td>4</td>
+<td>0</td>
+<td><code>pppp·</code></td>
+</tr>
+<tr>
+<td>JUMP 0</td>
+<td>5</td>
+<td>0</td>
+<td><code>ppppp·</code></td>
+</tr>
+<tr>
+<td>JUMPZ 3</td>
+<td>6</td>
+<td>3</td>
+<td><code>pppppp····</code></td>
+</tr>
+<tr>
+<td>INCHAR</td>
+<td>8</td>
+<td>0</td>
+<td><code>pppppppp·</code></td>
+</tr>
+<tr>
+<td>OUTCHAR</td>
+<td>8</td>
+<td>1</td>
+<td><code>pppppppp··</code></td>
+</tr>
+<tr>
+<td>LOAD</td>
+<td>9</td>
+<td>0</td>
+<td><code>ppppppppp·</code></td>
+</tr>
+<tr>
+<td>HALT</td>
+<td>10</td>
+<td>0</td>
+<td><code>pppppppppp</code></td>
+</tr>
+<tr>
+<td>CALL 3</td>
+<td>11</td>
+<td>3</td>
+<td><code>ppppppppppp····</code></td>
+</tr>
+<tr>
+<td>RET</td>
+<td>12</td>
+<td>0</td>
+<td><code>pppppppppppp·</code></td>
+</tr>
+<tr>
+<td>PUSHN 5</td>
+<td>13</td>
+<td>5</td>
+<td><code>ppppppppppppp······</code></td>
+</tr>
+<tr>
+<td>PICK 2</td>
+<td>14</td>
+<td>2</td>
+<td><code>pppppppppppppp···</code></td>
+</tr>
+</tbody>
+</table>
+<p>A concrete example: OUTCHAR followed by HALT is the byte sequence
+<code>patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</code>
+(8 patricks, 2 spaces, 10 patricks).</p>
+<hr>
+<h2>8. Turing Completeness</h2>
+<p>PatrickScript is Turing complete. A proof sketch:</p>
+<p>PatrickScript can simulate a Turing machine by using its integer memory
+as the TM tape (negative and positive addresses give a bidirectional
+infinite tape), the stack to hold the tape head position and current
+state, and the control flow instructions (JUMP, JUMPZ, JUMPNZ) to
+implement state transitions.</p>
+<p>More directly: PatrickScript has:
+- <strong>Unbounded memory</strong> (LOAD/STORE on integer addresses)
+- <strong>Arbitrary integer arithmetic</strong> (ADD, SUB, MUL, etc.)
+- <strong>Conditional branching</strong> (JUMPZ, JUMPNZ)
+- <strong>Loops</strong> (JUMP backwards creates loops, JUMPZ exits them)</p>
+<p>This is sufficient to compute any computable function. PatrickScript can
+simulate a Brainfuck interpreter, and Brainfuck is known Turing complete.</p>
+<hr>
+<h2>9. Program Examples</h2>
+<h3>9.1 Hello World (first character)</h3>
+<p>Output ASCII 72 ('H') and halt. Using <code>p</code> for <code>patrick</code> and <code>·</code> for space:</p>
+<pre><code>p········································································pppppppp··pppppppppp
+</code></pre>
+<p>Decoded:
+- <code>PUSH 71</code> — arity=1, gap_arg=71: <code>p</code> followed by 72 spaces
+- <code>OUTCHAR</code> — arity=8, gap_arg=1: <code>pppppppp</code> followed by 2 spaces
+- <code>HALT</code> — arity=10, gap_arg=0: <code>pppppppppp</code> with no trailing spaces</p>
+<p>Note: PUSH 71 requires 72 spaces after one <code>patrick</code> token. PatrickScript
+programs for non-trivial ASCII output are verbose by design. This is
+intentional: the verbosity is a property of the encoding, not an
+implementation choice.</p>
+<h3>9.2 Infinite counter</h3>
+<p>Print 0, 1, 2, ... indefinitely:</p>
+<pre><code>Instruction 0: PUSH 0        (arity=1, gap_arg=0) — push initial value
+Instruction 1: DUP           (arity=2, gap_arg=1) — duplicate for print
+Instruction 2: OUTNUM        (arity=8, gap_arg=3) — print number
+Instruction 3: PUSH 1        (arity=1, gap_arg=1) — push increment
+Instruction 4: ADD           (arity=3, gap_arg=0) — counter + 1
+Instruction 5: JUMP 1        (arity=5, gap_arg=1) — loop back to DUP
+</code></pre>
+<h3>9.3 Echo (copy stdin to stdout)</h3>
+<p>Read characters until EOF, writing each:</p>
+<pre><code>Instruction 0: INCHAR        (arity=8, gap_arg=0) — read byte or -1
+Instruction 1: DUP           (arity=2, gap_arg=1) — dup to check for EOF
+Instruction 2: PUSH 1        (arity=1, gap_arg=1) — push 1
+Instruction 3: ADD           (arity=3, gap_arg=0) — eof+1; 0 if was -1
+Instruction 4: JUMPZ 7       (arity=6, gap_arg=7) — if EOF, jump to HALT
+Instruction 5: OUTCHAR       (arity=8, gap_arg=1) — write byte
+Instruction 6: JUMP 0        (arity=5, gap_arg=0) — loop
+Instruction 7: POP           (arity=2, gap_arg=0) — discard sentinel -1
+Instruction 8: HALT          (arity=10, gap_arg=0) — done
+</code></pre>
+<h3>9.4 FizzBuzz (1 to 15)</h3>
+<p>The canonical Turing-completeness demonstration. Uses memory (STORE/LOAD) to
+hold the loop counter and a printed-flag, MOD for divisibility tests,
+JUMPZ/JUMPNZ for branching, OUTCHAR for string output, and OUTNUM for
+integer output. The source <code>examples/fizzbuzz.psa</code> is 70 instructions; the
+compiled <code>.ps</code> form is 3,361 bytes.</p>
+<p><strong>Design sketch</strong> (register map: mem[0] = n, mem[1] = printed_flag):</p>
+<pre><code>; --- Init ---
+PUSH 1; PUSH 0; STORE        ;; mem[0] = 1
+
+main_loop:
+  PUSH 0; LOAD               ;; n
+  PUSH 15; GT; JUMPNZ done   ;; n &gt; 15 → halt
+
+  PUSH 0; PUSH 1; STORE      ;; printed_flag = 0
+
+  ; Fizz check
+  PUSH 0; LOAD; PUSH 3; MOD
+  JUMPNZ check_buzz          ;; n%3 != 0 → skip
+  OUTCHAR 'F','i','z','z'
+  PUSH 1; PUSH 1; STORE      ;; printed_flag = 1
+
+check_buzz:
+  PUSH 0; LOAD; PUSH 5; MOD
+  JUMPNZ check_num           ;; n%5 != 0 → skip
+  OUTCHAR 'B','u','z','z'
+  PUSH 1; PUSH 1; STORE      ;; printed_flag = 1
+
+check_num:
+  PUSH 1; LOAD; JUMPNZ print_nl ;; printed_flag != 0 → newline only
+  PUSH 0; LOAD; OUTNUM           ;; otherwise print n (OUTNUM adds \n)
+  JUMP next_iter
+
+print_nl:
+  PUSH 10; OUTCHAR           ;; '\n'
+
+next_iter:
+  PUSH 0; LOAD; PUSH 1; ADD
+  PUSH 0; STORE              ;; n = n + 1
+  JUMP main_loop
+
+done:
+  HALT
+</code></pre>
+<p>Output for 1..15:</p>
+<pre><code>1
+2
+Fizz
+4
+Buzz
+Fizz
+7
+8
+Fizz
+Buzz
+11
+Fizz
+13
+14
+FizzBuzz
+</code></pre>
+<h3>9.5 Factorial (n!) — iterative</h3>
+<p>Computes n! for an integer read from stdin. Uses STORE/LOAD for an
+accumulator register, MUL for iteration. The source <code>corpus/factorial.psa</code>
+computes 5! = 120.</p>
+<p><strong>Design sketch</strong> (register map: mem[0] = accumulator):</p>
+<pre><code>PUSH 1; PUSH 0; STORE    ;; mem[0] = 1 (acc)
+INNUM                    ;; read n
+loop:
+  DUP; JUMPZ done        ;; n == 0 → done
+  DUP
+  PUSH 0; LOAD           ;; acc
+  MUL
+  PUSH 0; STORE          ;; acc = acc * n
+  PUSH 1; SUB            ;; n = n - 1
+  JUMP loop
+done:
+  POP
+  PUSH 0; LOAD; OUTNUM   ;; print acc
+  HALT
+</code></pre>
+<h3>9.6 Subroutine Calling Convention</h3>
+<p>CALL pushes the return address on top of the value stack before jumping.
+This means on subroutine entry, the return address sits above any
+arguments the caller pushed — the opposite of most conventional calling
+conventions where the return address is at a known frame offset.</p>
+<p>The idiomatic pattern is <strong>SWAP to expose arguments, SWAP back to
+restore</strong>. For a single-argument subroutine:</p>
+<pre><code>; Caller:
+PUSH arg
+CALL sub           ;; stack on entry to sub: [..., arg, ret_addr]
+
+; Subroutine body:
+sub:
+  SWAP             ;; [..., ret_addr, arg]   — expose argument
+  &lt; ... work on arg ... &gt;
+  SWAP             ;; [..., result, ret_addr] — restore call frame
+  RET              ;; returns; result is now on top for caller
+</code></pre>
+<p>For zero-argument subroutines (output-only, side-effect routines), the
+return address is already on top and no SWAP is needed:</p>
+<pre><code>; Caller:
+CALL print_greeting
+
+; Subroutine:
+print_greeting:
+  PUSH 72; OUTCHAR   ;; 'H'
+  PUSH 105; OUTCHAR  ;; 'i'
+  PUSH 10; OUTCHAR   ;; '\n'
+  RET
+</code></pre>
+<p>For multi-argument subroutines, the convention extends via multiple
+SWAPs or ROT:</p>
+<pre><code>; Two-argument sub (a, b → result):
+; Caller pushes a then b, then CALL.
+; Entry stack: [..., a, b, ret_addr]
+
+sub2:
+  ROT              ;; [..., b, ret_addr, a]  — surface first arg
+  SWAP             ;; [..., b, a, ret_addr]  — expose both args below ret
+  &lt; ... work on a and b ... &gt;   ;; stack: [..., result, ret_addr]
+  RET
+</code></pre>
+<p><strong>Recursive subroutines</strong> work naturally: each CALL pushes a new return
+address above the current frame's values. The recursive factorial in
+<code>corpus/factorial-recursive.psa</code> demonstrates this pattern — each
+recursive level pushes its <code>n</code> and then CALL pushes the return address;
+SWAP is used at subroutine entry to reorder them for computation.</p>
+<p><strong>Key invariant</strong>: at each RET, the return address must be on top of the
+stack with the result(s) below it. Violations (wrong stack depth, wrong
+top-of-stack) cause jump-out-of-bounds or return to a garbage address.
+The assembler's label system makes CALL targets readable, but the stack
+discipline at RET is the programmer's responsibility.</p>
+<h3>9.7 Zero-Argument Subroutine Reuse</h3>
+<p>A zero-argument subroutine is the simplest reusable unit: no arguments
+to SWAP around, no result to thread through the stack frame. Because the
+return address arrives on top, the subroutine executes, then RETs
+without any frame-management overhead.</p>
+<pre><code>print_hello:
+  .string &quot;Hi\n&quot;   ;; output-only side effect
+  RET               ;; return address already on top
+</code></pre>
+<p>The same subroutine can be called any number of times:</p>
+<pre><code>CALL print_hello   ;; first call
+CALL print_hello   ;; second call — same body, new return address
+HALT
+</code></pre>
+<p>Each CALL pushes a fresh return address, so independent invocations
+share the body code but maintain separate return continuations. There
+is no state to reset between calls; zero-argument subroutines are
+naturally reentrant in a single-threaded sequential program.</p>
+<p>This pattern suits output routines, print helpers, and repeated
+fixed-work blocks. The <code>corpus/call-string.psa</code> test demonstrates
+it: <code>.string "Hi\n"</code> + <code>RET</code>, called twice.</p>
+<h3>9.8 PICK for Non-Destructive Stack Access (v1.3.0)</h3>
+<p>PICK reads a value from depth n without consuming it, avoiding the
+need to pop-and-reorder when the same value is needed more than once.</p>
+<p><strong>PICK 0</strong> is equivalent to DUP: it copies the top element.</p>
+<p><strong>PICK n (n &gt; 0)</strong> copies an element buried below the top. The primary
+idiom: computing an expression that uses a value from deeper in the
+stack without removing it from its position.</p>
+<p>Example — compute <code>a + b + a</code> using PICK 1 to reuse <code>a</code>:</p>
+<pre><code>; a=3, b=7; compute 3 + 7 + 3 = 13
+PUSH 3      ;; stack: [3]
+PUSH 7      ;; stack: [3 7]  (7 on top)
+PICK 1      ;; copy a (depth 1): [3 7 3]
+ADD         ;; [3 10]
+ADD         ;; [13]
+OUTNUM      ;; outputs 13
+HALT
+</code></pre>
+<p>Without PICK, accessing <code>a</code> after pushing <code>b</code> would require storing
+<code>a</code> to memory and reloading it. PICK avoids the memory round-trip when
+the value is already on the stack.</p>
+<p>The <code>corpus/pick-deep.psa</code> test demonstrates accessing multiple
+depths: PICK 2 and PICK 1 used to non-destructively copy the first and
+second elements of a three-element stack.</p>
+<hr>
+<h2>10. Versioning</h2>
+<h3>v1.0.0 (2026-05-15)</h3>
+<p>Initial release. Stack machine with 10 arities: PUSH (1), stack ops (2),
+arithmetic (3), comparison/bitwise (4), JUMP/JUMPZ/JUMPNZ (5–7), I/O
+(8), memory (9), HALT (10). Arities 11+ reserved.</p>
+<h3>v1.1.0 (2026-05-15)</h3>
+<p>Adds subroutine support: CALL (arity 11) and RET (arity 12). Arities 13+
+remain reserved. A v1.1.0-conformant interpreter executes CALL and RET
+as specified in section 5.8; it treats arities ≥ 13 as runtime errors.
+A v1.0.0-only interpreter that encounters arity 11 or 12 is permitted to
+treat them as runtime errors (reserved instruction).</p>
+<h3>v1.2.0 (2026-05-15)</h3>
+<p>Adds PUSHN (arity 13, gap_arg = n): pushes −n onto the stack. Provides
+single-instruction negative literal encoding. The two-instruction idiom
+<code>PUSH n / NEG</code> remains valid and equivalent; PUSHN is a convenience
+instruction. A v1.2.0-conformant interpreter executes PUSHN as specified
+in section 5.9; it treats arities ≥ 14 as runtime errors.</p>
+<p>Arities 14+ remain reserved in v1.2.0.</p>
+<h3>v1.3.0 (2026-05-15)</h3>
+<p>Adds PICK (arity 14, gap_arg = n): copies the element at depth n from
+the top of the stack (0 = top). Provides direct access to buried stack
+values without destructive reordering. A v1.3.0-conformant interpreter
+executes PICK as specified in section 5.10; it treats arities ≥ 15 as
+runtime errors. A v1.2.0-only interpreter that encounters arity 14 is
+permitted to treat it as a runtime error.</p>
+<p>Arities 15+ remain reserved.</p>
+<p>Future versions add instructions via currently-reserved arities (15+) or
+extend the gap_arg space for existing arities.</p>
+<p>Version is declared in the spec document title, not in the source
+language (PatrickScript has no pragma syntax).</p>
+<hr>
+<h2>11. Formal Summary</h2>
+<ul>
+<li><strong>Tokens</strong>: WORD (<code>patrick</code>) and SP (U+0020)</li>
+<li><strong>Words</strong>: maximal WORD runs; arity = count</li>
+<li><strong>Gaps</strong>: maximal SP runs; width ≥ 1; gap_arg = width - 1</li>
+<li><strong>Instructions</strong>: (word, gap) pairs; last gap optional (treated as width 1)</li>
+<li><strong>Machine</strong>: stack + memory + IP + I/O</li>
+<li><strong>Completeness</strong>: Turing complete</li>
+<li><strong>Designed by</strong>: patrick-script-worker (LLM), 2026-05-15</li>
+<li><strong>Fixed by originator</strong>: name PatrickScript; tokens <code>patrick</code> and <code></code></li>
+</ul>
+</section>
 
 <hr>
 <footer>
