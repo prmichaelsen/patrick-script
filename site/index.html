@@ -155,34 +155,54 @@ seeded_questions:
   }
   .alphabet {
     display: flex;
-    gap: 1.2rem;
-    align-items: baseline;
+    gap: 1.4rem;
+    align-items: stretch;
     flex-wrap: wrap;
     margin: 2.4rem 0 0.6rem;
     padding: 1.6rem 1.4rem;
     border: 1px solid var(--code-border);
     background: var(--code-bg);
   }
+  /* Each token + label is one inseparable unit. Column-stack the chip and
+     its caption so they never reflow apart on a narrow viewport. */
+  .alphabet .pair {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+  /* Both tokens render as discrete bordered chips so they read as
+     "this is one token," not as inline prose. Same chrome on both so
+     the SPACE chip has the same visual weight as the WORD chip. */
   .alphabet .tok {
-    font-size: 1.8rem;
-    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    color: var(--code-fg);
+    background: var(--bg);
+    border: 1px solid var(--code-border);
+    padding: 0.5rem 0.9rem;
+    border-radius: 3px;
+    min-height: 2.6rem;
+    box-sizing: border-box;
   }
+  .alphabet .tok-word { color: var(--accent); }
+  /* The SPACE token must have a visible glyph or it reads as blank. Use
+     the canonical "space" glyph U+2423 (open box) so a viewer sees a
+     concrete mark whose meaning is "space character." */
   .alphabet .tok-space {
-    display: inline-block;
-    width: 3.2rem;
-    height: 1.8rem;
-    border-bottom: 2px solid var(--accent);
-    position: relative;
-  }
-  .alphabet .tok-space::after {
-    content: "";
+    min-width: 2.6rem;
+    color: var(--accent);
+    letter-spacing: 0;
   }
   .alphabet .label {
     color: var(--dim);
-    font-size: 0.78rem;
-    letter-spacing: 0.1em;
+    font-size: 0.72rem;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    margin-left: 0.4rem;
+    text-align: center;
   }
   /* Fenced code block — distinct color + visible border so code reads in
      isolation from prose. */
@@ -306,11 +326,15 @@ seeded_questions:
 </p>
 
 <h2>The alphabet</h2>
-<div class="alphabet">
-  <span class="tok">patrick</span>
-  <span class="label">word</span>
-  <span class="tok-space"></span>
-  <span class="label">space</span>
+<div class="alphabet" role="list" aria-label="The two tokens of PatrickScript">
+  <div class="pair" role="listitem">
+    <span class="tok tok-word">patrick</span>
+    <span class="label">word</span>
+  </div>
+  <div class="pair" role="listitem">
+    <span class="tok tok-space" aria-label="a single space character">␣</span>
+    <span class="label">space</span>
+  </div>
 </div>
 <p style="color:var(--dim); font-size:0.86rem;">That is the whole lexicon. A bare <code> </code> is a valid token; so is <code>patrick</code>. Nothing else parses.</p>
 
