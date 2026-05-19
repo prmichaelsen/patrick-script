@@ -1,4 +1,43 @@
 <!doctype html>
+<!-- @scry.entry
+id: code.patrickscript-landing-html~8fdeae3c
+kind: code
+status: active
+weight: 0.85
+tags:
+  - "topic:patrickscript"
+  - "patrickscript"
+  - "topic:landing-page"
+  - "landing-page"
+  - "scope:patrick-script"
+  - "patrick-script"
+  - "topic:cloudflare-worker"
+  - "cloudflare-worker"
+  - "topic:public-surface"
+  - "public-surface"
+summary: >
+  PatrickScript landing page at patrickscript.com — single static HTML
+  file served by a Cloudflare Worker (worker name patrickscript-landing,
+  routes patrickscript.com/* and www.patrickscript.com/*). Self-contained
+  (no external CSS/JS/fonts). Monospace throughout. Covers: the
+  two-token alphabet, the word-arity/gap-width encoding, Hello World
+  in both .psa assembly and the raw .ps form, ISA abridged, install,
+  and the LLM-authorship provenance note.
+  Also: PatrickScript landing page, patrickscript.com, CF Worker
+  inlined HTML, two-token language site, marketing surface,
+  monospace brutalism, single-file site, no JS.
+rationale: >
+  Without this marker the public landing page is not discoverable as
+  a project artifact via scry meaning-search; future wakes that need
+  to update copy or visual identity won't know it exists.
+applies: editing patrickscript.com copy, changing the landing page visual identity, redeploying the worker, adding sections to the site, reviewing the public surface
+seeded_questions:
+  - "Where does the patrickscript.com source live?"
+  - "How is the PatrickScript landing page deployed?"
+  - "Cloudflare Worker patrickscript-landing"
+  - "patrickscript.com site source"
+  - "PatrickScript public surface"
+@scry.entry.end -->
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -142,6 +181,12 @@
     h1 { font-size: 1.9rem; }
     .grid2 { grid-template-columns: 1fr; }
     .alphabet { padding: 1.2rem 1rem; }
+    /* Wrap normal code blocks so long URLs (git clone …) don't force
+       horizontal scroll on phones. `.raw` keeps `white-space: pre` so the
+       patrick…patrick truncation stays visually intact. */
+    pre:not(.raw) { white-space: pre-wrap; word-break: break-word; overflow-x: visible; }
+    /* Larger tap targets on the Read-further list (44pt-ish). */
+    ul li a { display: inline-block; padding: 0.55rem 0; }
   }
 </style>
 </head>
