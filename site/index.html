@@ -218,6 +218,35 @@ seeded_questions:
   }
   pre.raw { color: var(--dim); }
   pre.raw .p { color: var(--accent); }
+  /* Wrapped raw .ps block. Raw PatrickScript source is long runs of
+     `patrick` and spaces; without wrap it forces horizontal scroll,
+     especially on mobile. `pre-wrap` keeps the spaces (which encode
+     instruction arguments) intact while allowing line breaks; the
+     break-word fallback handles unbroken runs of concatenated
+     `patrickpatrickpatrick...` so they wrap mid-run instead of
+     blowing past the viewport. */
+  pre.ps-wrap {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    overflow-x: visible;
+  }
+  /* Per-program subheading inside the Programs section. Smaller than
+     the section h2s so the progression reads as items under one
+     section, not as a new section per program. */
+  h3.prog {
+    color: var(--code-fg);
+    font-size: 0.95rem;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin: 2.2rem 0 0.7rem;
+  }
+  h3.prog .desc {
+    color: var(--dim);
+    font-weight: 400;
+    letter-spacing: 0;
+    margin-left: 0.5rem;
+  }
   pre code { font-family: inherit; }
   .comment { color: var(--dim); }
   .kw { color: var(--accent); }
@@ -356,7 +385,7 @@ numbers, both expressed as counts:</p>
 <pre><code><span class="comment">; hello-world.psa</span>
 <span class="kw">.string</span> <span style="color:#9fd0a0">"Hello, World!\n"</span>
 <span class="kw">HALT</span></code></pre>
-<pre class="raw"><span class="p">patrick</span>
+<pre class="raw ps-wrap"><span class="p">patrick</span>
 <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrick</span>
 <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrick</span>
 <span class="p">…</span></pre>
@@ -365,6 +394,58 @@ numbers, both expressed as counts:</p>
 file. Each <code>PUSH n</code> is one <code>patrick</code> followed by <code>n</code>
 spaces. <code>OUTCHAR</code> is eight <code>patrick</code>s and one space. The full
 program is a few kilobytes of <code>patrick</code> and whitespace.</p>
+
+<h2>Programs</h2>
+<p style="color:var(--dim); font-size:0.86rem;">Three programs in full. The left column is the
+assembler mnemonic; the right column is the literal <code>.ps</code> source the parser sees — the
+same characters as the left, expanded to <code>patrick</code> tokens and spaces, wrapped to fit
+the page. Every contiguous run of <code>patrick</code> is one instruction's word-arity; the
+spaces after it are its gap-encoded argument.</p>
+
+<h3 class="prog">add <span class="desc">— push 3, push 5, add, print → 8</span></h3>
+<div class="grid2">
+<pre><code><span class="comment">; add.psa</span>
+<span class="kw">PUSH</span> 3
+<span class="kw">PUSH</span> 5
+<span class="kw">ADD</span>
+<span class="kw">OUTNUM</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrick</span>    <span class="p">patrick</span>      <span class="p">patrickpatrickpatrick</span> <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>    <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span></pre>
+</div>
+
+<h3 class="prog">square <span class="desc">— read n from stdin, print n²</span></h3>
+<div class="grid2">
+<pre><code><span class="comment">; square.psa — uses PICK 0 (non-destructive top-of-stack copy)</span>
+<span class="kw">INNUM</span>       <span class="comment">; read n</span>
+<span class="kw">PICK</span> 0      <span class="comment">; copy top: [n, n]</span>
+<span class="kw">MUL</span>         <span class="comment">; [n²]</span>
+<span class="kw">OUTNUM</span>
+<span class="kw">PUSH</span> 10
+<span class="kw">OUTCHAR</span>     <span class="comment">; newline</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>   <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> <span class="p">patrickpatrickpatrick</span>   <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>    <span class="p">patrick</span>           <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> </pre>
+</div>
+
+<h3 class="prog">echo <span class="desc">— copy stdin to stdout, halt on EOF</span></h3>
+<div class="grid2">
+<pre><code><span class="comment">; echo.psa — loop, read a byte, write it, until EOF (-1)</span>
+loop:
+<span class="kw">INCHAR</span>        <span class="comment">; read byte (-1 on EOF)</span>
+<span class="kw">DUP</span>
+<span class="kw">PUSH</span> 1
+<span class="kw">ADD</span>           <span class="comment">; -1 + 1 = 0 → EOF</span>
+<span class="kw">JUMPZ</span> done
+<span class="kw">OUTCHAR</span>
+<span class="kw">JUMP</span> loop
+done:
+<span class="kw">POP</span>
+<span class="kw">HALT</span></code></pre>
+<pre class="raw ps-wrap"><span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> <span class="p">patrickpatrick</span>  <span class="p">patrick</span>  <span class="p">patrickpatrickpatrick</span> <span class="p">patrickpatrickpatrickpatrickpatrickpatrick</span>        <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span>  <span class="p">patrickpatrickpatrickpatrickpatrick</span> <span class="p">patrickpatrick</span> <span class="p">patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick</span> </pre>
+</div>
+
+<p style="color:var(--dim); font-size:0.82rem;">The full corpus is on
+<a href="https://github.com/prmichaelsen/patrick-script/tree/main/corpus">GitHub</a> — fizzbuzz, recursive factorial,
+rot13, and forty-seven others.</p>
 
 <h2>Instruction set, abridged</h2>
 <table>
