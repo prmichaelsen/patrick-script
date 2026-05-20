@@ -1,0 +1,12 @@
+{
+  "name": "patrickscript-interpreter",
+  "version": "1.3.0",
+  "description": "TypeScript port of the PatrickScript v1.3.0 reference interpreter, with a stepper-friendly API. Shared by patrickscript.com/play and the VS Code extension.",
+  "type": "module",
+  "main": "ps-interpreter.ts",
+  "scripts": {
+    "conformance": "tsx conformance.ts",
+    "conformance:verbose": "tsx conformance.ts --verbose"
+  },
+  "license": "MIT"
+}
