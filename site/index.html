@@ -141,6 +141,49 @@ seeded_questions:
     text-transform: uppercase;
     margin-top: 1.4rem;
   }
+  /* Early-scroll CTA — sits between the header and the constraints block so
+     it lands in the first viewport. A bordered chip in the page's accent
+     color, monospace, restrained — same chrome as the .constraints /
+     .alphabet boxes so it reads as part of the same visual family, not a
+     louder marketing intrusion. */
+  .play-cta {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border: 1px solid var(--accent);
+    background: var(--code-bg);
+    padding: 0.95rem 1.2rem;
+    margin: 1.6rem 0 0;
+    text-decoration: none;
+    color: var(--fg);
+    transition: background 0.12s ease;
+  }
+  .play-cta:hover { background: #15171f; border-bottom-color: var(--accent); }
+  .play-cta .play-cta-label {
+    color: var(--dim);
+    font-size: 0.72rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    flex: 0 0 auto;
+  }
+  .play-cta .play-cta-text {
+    color: var(--fg);
+    font-size: 1rem;
+    flex: 1 1 auto;
+  }
+  .play-cta .play-cta-text strong {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .play-cta .play-cta-arrow {
+    color: var(--accent);
+    font-size: 1.2rem;
+    flex: 0 0 auto;
+    transition: transform 0.12s ease;
+  }
+  .play-cta:hover .play-cta-arrow { transform: translateX(3px); }
   /* Constraints block — the two givens that bound the LLM's design space. */
   .constraints {
     border: 1px solid var(--code-border);
@@ -591,6 +634,12 @@ seeded_questions:
     the agent's.
   </p>
 </header>
+
+<a class="play-cta" href="/play" aria-label="Open the PatrickScript stepper at /play">
+  <span class="play-cta-label">Live</span>
+  <span class="play-cta-text">Step a <strong>PatrickScript</strong> program one opcode at a time — stack, memory, and I/O all animated.</span>
+  <span class="play-cta-arrow" aria-hidden="true">→</span>
+</a>
 
 <section class="constraints" aria-label="The two constraints the originator gave the agent">
   <h3>The originator's two constraints</h3>

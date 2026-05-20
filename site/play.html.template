@@ -58,6 +58,7 @@ seeded_questions:
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>PatrickScript · Play</title>
 <meta name="description" content="Step through PatrickScript programs one opcode at a time — a visualgo-style web visualizer with live stack, memory, and I/O.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23000'/%3E%3Ctext x='32' y='44' font-family='monospace' font-size='40' fill='%23ffc857' text-anchor='middle'%3Ep%3C/text%3E%3C/svg%3E">
 <style>
   :root {
     --bg: #0f1115;
