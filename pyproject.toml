@@ -34,3 +34,8 @@ include = [
   "README.md",
   "spec/patrickscript.md",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+]
