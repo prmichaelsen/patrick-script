@@ -2,8 +2,8 @@
   "name": "patrickscript-vscode",
   "displayName": "PatrickScript",
   "description": "Syntax highlighting, per-arity semantic coloring, decoded-instruction CodeLens, hover, and parse-error diagnostics for PatrickScript (.ps) and PatrickScript Assembly (.psa). Reuses the official TypeScript interpreter for correctness.",
-  "version": "0.1.0",
-  "publisher": "patrickscript",
+  "version": "0.1.1",
+  "publisher": "prmichaelsen",
   "repository": {
     "type": "git",
     "url": "https://github.com/patrickscript/patrick-script"
