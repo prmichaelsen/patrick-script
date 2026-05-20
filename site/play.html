@@ -96,6 +96,12 @@ seeded_questions:
   * { box-sizing: border-box; }
   html, body {
     margin: 0; padding: 0; height: 100%;
+    /* Mobile overflow-x containment: the page itself must never
+       horizontal-scroll. Wide children (source <pre>, memory table,
+       stack cells) each opt into their own internal scroll via
+       .pane { overflow: auto } below — they DO NOT push the page. */
+    max-width: 100vw;
+    overflow-x: hidden;
     background: var(--bg); color: var(--fg);
     font-family: var(--mono);
     font-size: 14px;
@@ -103,6 +109,7 @@ seeded_questions:
   }
   header {
     display: flex; align-items: baseline; gap: 1rem;
+    flex-wrap: wrap;
     padding: 0.8rem 1.1rem;
     border-bottom: 1px solid var(--border);
     background: var(--bg2);
@@ -186,6 +193,7 @@ seeded_questions:
     gap: 0;
     height: calc(100vh - 110px);
     min-height: 480px;
+    max-width: 100vw;
   }
   @media (max-width: 900px) {
     main {
@@ -197,6 +205,11 @@ seeded_questions:
     border-right: 1px solid var(--border);
     overflow: auto;
     padding: 0.6rem 0.9rem;
+    /* min-width: 0 lets the grid track shrink below the pane's
+       intrinsic content width so overflow:auto can take effect.
+       Without this, a wide <pre> in source-pane bullies the grid
+       column wider than the viewport on mobile. */
+    min-width: 0;
   }
   .pane:last-child { border-right: none; }
   .pane h2 {
@@ -229,6 +242,11 @@ seeded_questions:
     margin: 0;
     white-space: pre;
     font: inherit;
+    /* Disassembled lines can be wider than a phone viewport
+       (e.g. "PUSHN 12345 ; push number 12345"). Pre keeps the
+       monospace layout; the parent .pane handles overflow:auto
+       so the scroll lives inside the source pane, not on body. */
+    min-width: 0;
   }
   .src-line {
     display: block;
