@@ -375,6 +375,80 @@ seeded_questions:
     padding: 0.05rem 0.3rem;
     border-radius: 2px;
   }
+  .proof-figure-trigger {
+    display: block;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    background: transparent;
+    cursor: zoom-in;
+    font: inherit;
+    color: inherit;
+  }
+  .proof-figure-trigger:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 2px;
+  }
+  .proof-figure-hint {
+    display: inline-block;
+    margin-left: 0.4rem;
+    color: var(--dim);
+    font-style: italic;
+    opacity: 0.75;
+  }
+  /* ─── Full-screen proof modal ─────────────────────────────────────────
+     <dialog id="proof-modal"> opens via showModal() when the trigger
+     button (around the proof figure image) is clicked. Zero padding so
+     the image fills as much of the viewport as possible while
+     preserving aspect ratio.
+  */
+  .proof-modal {
+    padding: 0;
+    border: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    background: transparent;
+    color: var(--fg);
+    overflow: hidden;
+  }
+  .proof-modal::backdrop {
+    background: rgba(0, 0, 0, 0.92);
+  }
+  .proof-modal img {
+    display: block;
+    width: 100vw;
+    height: 100vh;
+    max-width: 100vw;
+    max-height: 100vh;
+    object-fit: contain;
+    margin: 0 auto;
+    background: var(--code-bg);
+  }
+  .proof-modal-close {
+    position: fixed;
+    top: 0.6rem;
+    right: 0.8rem;
+    z-index: 10;
+    width: 2.4rem;
+    height: 2.4rem;
+    line-height: 2.2rem;
+    text-align: center;
+    border: 1px solid var(--code-border);
+    background: rgba(0, 0, 0, 0.6);
+    color: var(--fg);
+    font-size: 1.6rem;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 0;
+  }
+  .proof-modal-close:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 2px;
+  }
 
   /* ─── Embedded full spec ──────────────────────────────────────────────
      The Full Specification section is transcluded at build time from
@@ -678,22 +752,63 @@ the package goes up).</p>
 
 <h2 id="the-proof">The proof</h2>
 <p style="color:var(--dim); font-size:0.86rem; max-width:64ch;">
-§8 of the spec used to assert PatrickScript was Turing complete and
-trust you to believe it. It now cites a file. This is the file.
+Spec §8 cites this file as proof PatrickScript is Turing complete:
+14,266 bytes of <code>patrick</code> and spaces, compiling to a working
+Brainfuck interpreter.
 </p>
 <figure class="proof-figure">
-  <img
-    src="<!--__PATRICKSCRIPT_BRAINFUCK_PNG_DATAURI__-->"
-    alt="examples/brainfuck.ps rendered in an editor — 14,266 bytes of the word 'patrick' and spaces, the compiled Brainfuck interpreter that discharges spec §8's Turing-completeness claim"
-    loading="lazy"
-    width="1026"
-    height="1114">
+  <button type="button" class="proof-figure-trigger" aria-label="Open full-screen view of examples/brainfuck.ps">
+    <img
+      src="<!--__PATRICKSCRIPT_BRAINFUCK_PNG_DATAURI__-->"
+      alt="examples/brainfuck.ps rendered in an editor — 14,266 bytes of the word 'patrick' and spaces, the compiled Brainfuck interpreter that discharges spec §8's Turing-completeness claim"
+      loading="lazy"
+      width="1026"
+      height="1114">
+  </button>
   <figcaption>
     <code>examples/brainfuck.ps</code> — 14,266 bytes of the word
     <code>patrick</code> and spaces, arranged correctly. A Brainfuck
     interpreter, compiled. The proof spec §8 cites.
+    <span class="proof-figure-hint">Tap image to enlarge.</span>
   </figcaption>
 </figure>
+
+<dialog id="proof-modal" class="proof-modal" aria-label="examples/brainfuck.ps full-screen view">
+  <button type="button" class="proof-modal-close" aria-label="Close full-screen view">&times;</button>
+  <img
+    src="<!--__PATRICKSCRIPT_BRAINFUCK_PNG_DATAURI__-->"
+    alt="examples/brainfuck.ps rendered in an editor — 14,266 bytes of the word 'patrick' and spaces, the compiled Brainfuck interpreter that discharges spec §8's Turing-completeness claim"
+    width="1026"
+    height="1114">
+</dialog>
+<script>
+(function () {
+  var modal = document.getElementById('proof-modal');
+  var trigger = document.querySelector('.proof-figure-trigger');
+  var closeBtn = document.querySelector('.proof-modal-close');
+  if (!modal || !trigger || !closeBtn) return;
+  function open() {
+    if (typeof modal.showModal === 'function') {
+      modal.showModal();
+    } else {
+      modal.setAttribute('open', '');
+    }
+  }
+  function close() {
+    if (typeof modal.close === 'function') {
+      modal.close();
+    } else {
+      modal.removeAttribute('open');
+    }
+  }
+  trigger.addEventListener('click', open);
+  closeBtn.addEventListener('click', close);
+  modal.addEventListener('click', function (event) {
+    // Click on backdrop (the dialog element itself, not its children) closes.
+    if (event.target === modal) close();
+  });
+})();
+</script>
 
 <h2 id="full-specification">Full specification</h2>
 <p style="color:var(--dim); font-size:0.86rem;">
