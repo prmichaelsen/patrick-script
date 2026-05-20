@@ -8,3 +8,5 @@ tsconfig.json
 **/*.map
 **/*.ts
 !dist/extension.js
+icon.svg.html
+package-lock.json

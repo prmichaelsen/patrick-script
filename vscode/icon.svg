@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <!-- Dark rounded background -->
+  <rect width="128" height="128" rx="22" ry="22" fill="#0d1117"/>
+
+  <!-- p — white, top-left -->
+  <text x="14" y="84"
+        font-family="'Liberation Sans', 'FreeSans', 'DejaVu Sans', sans-serif"
+        font-weight="700" font-size="104" fill="#ffffff"
+        letter-spacing="-4">p</text>
+
+  <!-- s — lime green, bottom-right, overlapping -->
+  <text x="50" y="118"
+        font-family="'Liberation Sans', 'FreeSans', 'DejaVu Sans', sans-serif"
+        font-weight="700" font-size="92" fill="#a3e635">s</text>
+</svg>
