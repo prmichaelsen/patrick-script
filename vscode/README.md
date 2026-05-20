@@ -12,19 +12,20 @@ tags:
   - "tooling"
 summary: >
   README for the PatrickScript VS Code extension. Two file types
-  (.ps and .psa); three .ps surfaces (semantic tokens, inlay hints,
+  (.ps and .psa); three .ps surfaces (semantic tokens, CodeLens,
   hover); TextMate grammar for .psa. Shared TypeScript interpreter at
   ../site/js/ps-interpreter.ts is bundled in via esbuild, no fork.
-  Also: VS Code extension PatrickScript, vsce package, inlay hints,
-  semantic tokens, .ps highlighting, .psa highlighting, disassembler.
+  Also: VS Code extension PatrickScript, vsce package, CodeLens
+  overlay, semantic tokens, .ps highlighting, .psa highlighting,
+  disassembler.
 rationale: >
   Without this, the extension's surfaces and build/publish flow are
-  undiscoverable from the marketplace page; future wakes also lose the
-  rationale for inlay-hints-over-CodeLens.
+  undiscoverable from the marketplace page; future wakes also lose
+  the design rationale for range-anchored CodeLens on single-line .ps.
 applies: publishing the extension, modifying any of its providers, debugging .ps highlighting, updating the marketplace page
 seeded_questions:
   - "How do I install the PatrickScript VS Code extension?"
-  - "Why does the extension use inlay hints instead of CodeLens?"
+  - "How does CodeLens render on single-line .ps files?"
   - "Where is the .ps interpreter the extension uses?"
   - "How do I rebuild and publish the PatrickScript VS Code extension?"
 @scry.entry.end -->
@@ -39,13 +40,15 @@ whose entire source is the literal word `patrick` and the space.
 
 ### `.ps` files (the language itself)
 
-- **Length-based coloring (semantic tokens)**. Each `patrick` run is
+- **Per-arity coloring (semantic tokens)**. Each `patrick` run is
   colored by its arity, so the opcode family is visible at a glance
   — pushes look different from arithmetic, which looks different
-  from control flow.
-- **Decoded inlay hints**. The instruction's index and mnemonic float
-  inline above each word-run (`0: PUSH 5`, `1: ADD`, `12: JUMP 4`,
-  ...). The hint comes from the same TypeScript interpreter that
+  from control flow. Themes can paint each arity bucket distinctly
+  via the `psPush`, `psStack`, `psArith`, ..., `psReserved` token
+  types declared in the manifest.
+- **Decoded CodeLens overlay**. The instruction's index and mnemonic
+  float above each word-run (`0: PUSH 5`, `1: ADD`, `12: JUMP 4`,
+  ...). The label comes from the same TypeScript interpreter that
   powers [patrickscript.com/play](https://patrickscript.com/play) —
   there is no separate disassembler.
 - **Hover disassembly**. Hover any `patrick` to see the mnemonic,
@@ -58,21 +61,27 @@ whose entire source is the literal word `patrick` and the space.
 - Mnemonics with operands (`PUSH 5`, `JUMP fac_base`)
 - Bare mnemonics (`ADD`, `DUP`, ...)
 
-## Why inlay hints, not CodeLens
+## How CodeLens works on single-line `.ps`
 
-The original concept called for a CodeLens overlay above each word
-group. CodeLens anchors to lines; `.ps` programs are typically a
-single line of `patrick`-runs. CodeLens would pile every hint at
-line 0 and become useless.
-
-Inlay hints live *between tokens*, which is the structure `.ps`
-actually has. Same information, correct primitive.
+VS Code anchors each CodeLens to a *range* (not to a whole line) —
+multiple CodeLenses on the same line stack horizontally in the
+gutter above that line, each labeled with the mnemonic of the
+instruction it covers. `.ps` programs are typically a single line
+of `patrick`-runs, so the entire decoded program reads top-to-bottom
+above that line as a column of `0: PUSH 5`, `1: ADD`, ... labels —
+exactly the "instruction stream above the source" effect the
+directive called for.
 
 ## Settings
 
-- `patrickscript.inlayHints.enabled` (default `true`) — global on/off.
-- `patrickscript.inlayHints.showOperand` (default `true`) — show
-  `PUSH 5` (true) or `PUSH` (false).
+- `patrickscript.semanticTokens.enabled` (default `true`) — global
+  on/off for per-arity coloring.
+- `patrickscript.codeLens.enabled` (default `true`) — global on/off
+  for the decoded-instruction overlay.
+- `patrickscript.codeLens.showIndex` (default `true`) — show
+  `0: PUSH 5` (true) or `PUSH 5` (false).
+- `patrickscript.hover.enabled` (default `true`) — global on/off
+  for the disassembly hover popup.
 
 ## Building from source
 
