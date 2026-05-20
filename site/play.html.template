@@ -402,7 +402,7 @@ seeded_questions:
 </main>
 
 <footer>
-  Visualizer for the PatrickScript v1.3.0 reference interpreter. Source: <a href="https://github.com/prmichaelsen/patrick-script/blob/main/site/js/ps-interpreter.ts"><code>site/js/ps-interpreter.ts</code></a>. Two-token alphabet: <code>patrick</code> + space. Deep-link by hash: <code>/play#brainfuck</code>.
+  Visualizer for the PatrickScript v1.3.0 reference interpreter. Source: <a href="https://github.com/prmichaelsen/patrick-script/blob/main/site/js/ps-interpreter.ts"><code>site/js/ps-interpreter.ts</code></a>. Two-token alphabet: <code>patrick</code> + space. Deep-link by path: <code>/play/brainfuck</code>.
 </footer>
 
 <!-- Compiled interpreter (IIFE, exposes window.PS). -->
@@ -435,7 +435,7 @@ function init() {
     sel.appendChild(opt);
   }
   sel.addEventListener('change', () => {
-    loadExample(sel.value, /*pushHash=*/true);
+    loadExample(sel.value, /*pushUrl=*/true);
   });
 
   $('btn-run').addEventListener('click', toggleRun);
@@ -451,29 +451,43 @@ function init() {
     }
   });
 
-  window.addEventListener('hashchange', applyHash);
+  window.addEventListener('hashchange', applyRoute);
+  window.addEventListener('popstate', applyRoute);
 
   // Default speed label
   $('speed-label').textContent = SPEED_LABELS[speedIdx];
 
-  applyHash();
+  applyRoute();
 }
 
-function applyHash() {
-  const slug = (location.hash || '').replace(/^#/, '');
-  const target = (slug && EXAMPLES[slug]) ? slug : EXAMPLE_ORDER[0];
+function slugFromLocation() {
+  // 1. Pathname: /play/<slug> takes precedence (clean URL form).
+  const m = location.pathname.match(/^\/play\/([A-Za-z0-9_-]+)\/?$/);
+  if (m && EXAMPLES[m[1]]) return m[1];
+  // 2. Hash: legacy /play#<slug> still resolves.
+  const hashSlug = (location.hash || '').replace(/^#/, '');
+  if (hashSlug && EXAMPLES[hashSlug]) return hashSlug;
+  // 3. Default to the first example.
+  return EXAMPLE_ORDER[0];
+}
+
+function applyRoute() {
+  const target = slugFromLocation();
   if (target !== currentSlug) {
     $('example-select').value = target;
-    loadExample(target, /*pushHash=*/false);
+    loadExample(target, /*pushUrl=*/false);
   }
 }
 
-function loadExample(slug, pushHash) {
+function loadExample(slug, pushUrl) {
   stopAuto();
   currentSlug = slug;
-  if (pushHash) {
-    if (location.hash !== '#' + slug) {
-      history.replaceState(null, '', '#' + slug);
+  if (pushUrl) {
+    // Canonical URL: /play/<slug>. Replace state (no history pollution
+    // from dropdown changes) and clear any stale hash.
+    const targetPath = '/play/' + slug;
+    if (location.pathname !== targetPath || location.hash) {
+      history.replaceState(null, '', targetPath);
     }
   }
   const ex = EXAMPLES[slug];
