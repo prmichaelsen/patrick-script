@@ -1,0 +1,133 @@
+# @scry.entry
+# id: code.patrickscript-vscode-ci-workflow~b1a4d2f8
+# kind: code
+# status: active
+# weight: 0.7
+# tags:
+#   - "topic:patrickscript"
+#   - "patrickscript"
+#   - "topic:ci"
+#   - "ci"
+#   - "topic:vscode-extension"
+#   - "vscode-extension"
+#   - "topic:vsce"
+#   - "vsce"
+#   - "topic:ovsx"
+#   - "ovsx"
+#   - "scope:patrick-script"
+#   - "patrick-script"
+#   - "github-actions"
+# summary: >
+#   GitHub Actions workflow for the PatrickScript VS Code extension.
+#   Two jobs: (1) `build` runs on every push and pull request that
+#   touches `vscode/**` or this workflow file — installs deps, runs
+#   `tsc --noEmit` typecheck, esbuild bundle, and `vsce package` to
+#   produce a .vsix artifact uploaded for inspection; (2) `publish`
+#   runs only on `vscode-v*` tags and pushes the packaged extension
+#   to both the VS Code Marketplace (vsce) and OpenVSX (ovsx),
+#   gated on `VSCE_PAT` and `OVSX_TOKEN` repository secrets. CI gates
+#   prevent broken extensions from reaching the marketplace; the dual
+#   publish keeps coverage on both VS Code and VSCodium / Cursor.
+#   Also: vscode.yml, GitHub Actions, vsce publish, ovsx publish,
+#   PatrickScript marketplace, OpenVSX, .vsix CI, extension CI,
+#   tag-triggered publish, vscode-v* tag scheme.
+# rationale: >
+#   The Python interpreter has a CI job and a tag-triggered PyPI
+#   publish workflow. The VS Code extension shipped without either,
+#   meaning a typecheck regression or grammar typo could land on main
+#   silently, and publishing is a manual `vsce package && vsce publish`
+#   from a developer machine — a step that disappears the moment the
+#   developer changes. This workflow gives the extension the same
+#   CI/publish posture as the Python package.
+# applies: gating extension PRs on typecheck and package success, publishing the extension to Marketplace + OpenVSX on tag, debugging extension build failures in CI, setting up VSCE_PAT and OVSX_TOKEN secrets
+# seeded_questions:
+#   - "How does CI verify the PatrickScript VS Code extension builds?"
+#   - "How is the PatrickScript extension published to the Marketplace?"
+#   - "What tag triggers a VS Code Marketplace publish?"
+#   - "Where do VSCE_PAT and OVSX_TOKEN come from?"
+#   - "PatrickScript extension CI workflow"
+# @scry.entry.end
+
+name: VS Code Extension
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'vscode/**'
+      - '.github/workflows/vscode.yml'
+    tags:
+      - 'vscode-v*'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'vscode/**'
+      - '.github/workflows/vscode.yml'
+
+jobs:
+  build:
+    name: Typecheck, bundle, package
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vscode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Typecheck
+        run: npx --no-install tsc --noEmit -p tsconfig.json
+
+      - name: Build bundle (esbuild)
+        run: npm run build
+
+      - name: Package .vsix
+        run: npx --yes @vscode/vsce package --no-dependencies
+
+      - name: Upload .vsix artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: patrickscript-vscode-vsix
+          path: vscode/patrickscript-vscode-*.vsix
+          if-no-files-found: error
+
+  publish:
+    name: Publish to Marketplace + OpenVSX
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/vscode-v')
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: vscode
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build bundle
+        run: npm run build
+
+      - name: Publish to VS Code Marketplace
+        run: npx --yes @vscode/vsce publish --no-dependencies --pat "$VSCE_PAT"
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+
+      - name: Publish to OpenVSX
+        run: npx --yes ovsx publish --no-dependencies --pat "$OVSX_TOKEN"
+        env:
+          OVSX_TOKEN: ${{ secrets.OVSX_TOKEN }}
