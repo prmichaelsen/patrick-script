@@ -106,7 +106,24 @@ npm run publish:ovsx       # Open VSX Registry (needs ovsx token)
 Publisher tokens are an originator responsibility (Marketplace
 account creation, PAT issuance).
 
+## About — LLM authorship
+
+**PatrickScript** is a programming language designed entirely by a
+large language model (Claude). The two-token alphabet (`patrick` +
+space) is the only constraint the human author fixed; every other
+property — the stack-machine semantics, the per-arity opcode
+families, the assembly form, the unary-encoding scheme — emerged
+from LLM design choices, then was implemented and refined through
+subsequent LLM-driven development.
+
+**This VS Code extension** was likewise authored by an LLM — the
+TextMate grammars, the per-arity semantic-token provider, the
+range-anchored CodeLens disassembler, and the hover provider all
+came from Claude.
+
+Read more at [patrickscript.com](https://patrickscript.com).
+
 ## License
 
 MIT — same as the rest of the
-[patrick-script](https://github.com/patrickscript/patrick-script) project.
+[patrick-script](https://github.com/prmichaelsen/patrick-script) project.
