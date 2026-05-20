@@ -1,0 +1,141 @@
+{
+  "name": "patrickscript-vscode",
+  "displayName": "PatrickScript",
+  "description": "Syntax highlighting, semantic arity-coloring, decoded CodeLens, and hover disassembly for PatrickScript (.ps) and PatrickScript Assembly (.psa). Reuses the official TypeScript interpreter for correctness.",
+  "version": "0.1.0",
+  "publisher": "patrickscript",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/patrickscript/patrick-script"
+  },
+  "homepage": "https://patrickscript.com",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.84.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "keywords": [
+    "patrickscript",
+    "esolang",
+    "stack-machine",
+    "disassembler",
+    "two-token",
+    "unary"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [
+    "onLanguage:patrickscript",
+    "onLanguage:patrickscript-assembly"
+  ],
+  "contributes": {
+    "languages": [
+      {
+        "id": "patrickscript",
+        "aliases": ["PatrickScript", "patrickscript"],
+        "extensions": [".ps"],
+        "configuration": "./language-configuration.ps.json"
+      },
+      {
+        "id": "patrickscript-assembly",
+        "aliases": ["PatrickScript Assembly", "patrickscript-assembly"],
+        "extensions": [".psa"],
+        "configuration": "./language-configuration.psa.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "patrickscript",
+        "scopeName": "source.patrickscript",
+        "path": "./syntaxes/patrickscript.tmLanguage.json"
+      },
+      {
+        "language": "patrickscript-assembly",
+        "scopeName": "source.patrickscript-assembly",
+        "path": "./syntaxes/patrickscript-assembly.tmLanguage.json"
+      }
+    ],
+    "semanticTokenTypes": [
+      { "id": "psPush",     "description": "PUSH word (arity 1)" },
+      { "id": "psStack",    "description": "Stack-manipulation word (arity 2)" },
+      { "id": "psArith",    "description": "Arithmetic word (arity 3)" },
+      { "id": "psCmp",      "description": "Comparison/bitwise word (arity 4)" },
+      { "id": "psJump",     "description": "Unconditional JUMP word (arity 5)" },
+      { "id": "psJumpz",    "description": "JUMPZ word (arity 6)" },
+      { "id": "psJumpnz",   "description": "JUMPNZ word (arity 7)" },
+      { "id": "psIo",       "description": "I/O word (arity 8)" },
+      { "id": "psMem",      "description": "Memory word (arity 9)" },
+      { "id": "psHalt",     "description": "HALT word (arity 10)" },
+      { "id": "psCall",     "description": "CALL word (arity 11)" },
+      { "id": "psRet",      "description": "RET word (arity 12)" },
+      { "id": "psPushn",    "description": "PUSHN word (arity 13)" },
+      { "id": "psPick",     "description": "PICK word (arity 14)" },
+      { "id": "psReserved", "description": "Reserved word (arity >= 15)" }
+    ],
+    "semanticTokenScopes": [
+      {
+        "language": "patrickscript",
+        "scopes": {
+          "psPush":     ["constant.numeric.ps"],
+          "psStack":    ["variable.other.ps"],
+          "psArith":    ["keyword.operator.arithmetic.ps"],
+          "psCmp":      ["keyword.operator.logical.ps"],
+          "psJump":     ["keyword.control.flow.ps"],
+          "psJumpz":    ["keyword.control.conditional.ps"],
+          "psJumpnz":   ["keyword.control.conditional.ps"],
+          "psIo":       ["support.function.io.ps"],
+          "psMem":      ["storage.modifier.memory.ps"],
+          "psHalt":     ["keyword.control.halt.ps"],
+          "psCall":     ["entity.name.function.call.ps"],
+          "psRet":      ["entity.name.function.return.ps"],
+          "psPushn":    ["constant.numeric.negative.ps"],
+          "psPick":     ["variable.other.pick.ps"],
+          "psReserved": ["invalid.illegal.ps"]
+        }
+      }
+    ],
+    "configuration": {
+      "title": "PatrickScript",
+      "properties": {
+        "patrickscript.semanticTokens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Colorize each `patrick` word in .ps files by its arity (which is its opcode family)."
+        },
+        "patrickscript.codeLens.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a decoded-instruction CodeLens above each `patrick` word in .ps files."
+        },
+        "patrickscript.codeLens.showIndex": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the 0-based instruction index in the CodeLens label."
+        },
+        "patrickscript.hover.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show opcode, operand, and stack effect on hover in .ps files."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18",
+    "build:watch": "esbuild src/extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node --target=node18 --watch",
+    "typecheck": "tsc --noEmit",
+    "vscode:prepublish": "npm run build",
+    "package": "vsce package",
+    "publish": "vsce publish",
+    "publish:ovsx": "ovsx publish"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.84.0",
+    "@vscode/vsce": "^2.24.0",
+    "esbuild": "^0.20.0",
+    "ovsx": "^0.9.0",
+    "typescript": "^5.4.0"
+  }
+}

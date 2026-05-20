@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PatrickScript Assembly",
+  "scopeName": "source.patrickscript-assembly",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#label-decl" },
+    { "include": "#instruction" }
+  ],
+  "repository": {
+    "comment": {
+      "match": ";.*$",
+      "name": "comment.line.semicolon.psa"
+    },
+    "label-decl": {
+      "match": "^\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*:",
+      "captures": {
+        "1": { "name": "entity.name.label.psa" }
+      }
+    },
+    "instruction": {
+      "patterns": [
+        { "include": "#mnemonic-with-operand" },
+        { "include": "#mnemonic-bare" }
+      ]
+    },
+    "mnemonic-with-operand": {
+      "match": "\\b(PUSH|PUSHN|JUMP|JUMPZ|JUMPNZ|CALL|PICK)\\b\\s+(-?[0-9]+|[A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "keyword.mnemonic.operand.psa" },
+        "2": {
+          "patterns": [
+            { "match": "-?[0-9]+", "name": "constant.numeric.psa" },
+            { "match": "[A-Za-z_][A-Za-z0-9_]*", "name": "variable.label.reference.psa" }
+          ]
+        }
+      }
+    },
+    "mnemonic-bare": {
+      "match": "\\b(POP|DUP|SWAP|ROT|ADD|SUB|MUL|DIV|MOD|NEG|EQ|LT|GT|AND|OR|XOR|NOT|INCHAR|OUTCHAR|INNUM|OUTNUM|LOAD|STORE|HALT|RET)\\b",
+      "name": "keyword.mnemonic.psa"
+    }
+  }
+}

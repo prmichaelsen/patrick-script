@@ -1,0 +1,27 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "PatrickScript",
+  "scopeName": "source.patrickscript",
+  "fileTypes": ["ps"],
+  "patterns": [
+    { "include": "#word" },
+    { "include": "#gap" },
+    { "include": "#illegal" }
+  ],
+  "repository": {
+    "word": {
+      "match": "(?:patrick)+",
+      "name": "entity.name.tag.word.patrickscript",
+      "comment": "Maximal run of 'patrick' tokens. Per-arity semantic coloring is applied by the extension's semantic-tokens provider; this scope is the textmate fallback."
+    },
+    "gap": {
+      "match": " +",
+      "name": "punctuation.whitespace.gap.patrickscript",
+      "comment": "Maximal run of single-space tokens. gap_width minus 1 is the immediate argument."
+    },
+    "illegal": {
+      "match": "[^patrick ]+",
+      "name": "invalid.illegal.patrickscript"
+    }
+  }
+}
