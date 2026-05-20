@@ -1,0 +1,715 @@
+<!doctype html>
+<!-- GENERATED FILE — do not edit by hand.
+     Source: site/play.html.template + site/js/ps-interpreter.ts
+     Build : uv run site/build_play.py
+-->
+<!-- @scry.entry
+id: code.patrickscript-play-html~7a91f0d8
+kind: code
+status: active
+weight: 0.85
+tags:
+  - "topic:patrickscript"
+  - "patrickscript"
+  - "topic:play"
+  - "play"
+  - "topic:stepper"
+  - "stepper"
+  - "topic:visualizer"
+  - "visualizer"
+  - "topic:visualgo"
+  - "visualgo"
+  - "topic:cloudflare-worker"
+  - "cloudflare-worker"
+  - "topic:public-surface"
+  - "public-surface"
+  - "scope:patrick-script"
+  - "patrick-script"
+summary: >
+  PatrickScript visual stepper TEMPLATE for patrickscript.com/play —
+  visualgo-style web visualizer that executes PatrickScript programs
+  one opcode at a time and animates stack/memory/IO/PC state. Built by
+  site/build_play.py which fills three placeholders: the compiled
+  TypeScript interpreter (as an IIFE bundle), the examples JSON
+  (slug → .ps source), and the example index. Deep-links via the URL
+  hash: /play#hello-world, /play#fibonacci, etc. Self-contained: no
+  external CSS, no external JS, no external fonts — same shape as
+  index.html.template, served by the patrickscript-play-landing CF
+  Worker. Phase 2: static layout, no animations; controls = run /
+  pause / step / reset / speed.
+  Also: play.html.template, patrickscript.com/play, PatrickScript
+  visualizer, visual stepper, in-browser interpreter, visualgo-style,
+  visualgo PatrickScript, deep-link stepper, hello-world fibonacci
+  factorial-recursive fizzbuzz brainfuck, opcode highlight, stack pane,
+  memory pane, stdout pane, prefers-reduced-motion.
+rationale: >
+  The page is a single template so build_play.py is the only place
+  that knows how to assemble the bundle. Without this template, every
+  redeploy would hand-edit a generated HTML file and inevitably drift
+  from the interpreter source.
+applies: editing the patrickscript.com/play stepper page, updating
+  controls, restyling panes, adding/removing examples
+seeded_questions:
+  - "Where is the PatrickScript visual stepper template?"
+  - "How is patrickscript.com/play built?"
+  - "Where does the /play page get its interpreter JS?"
+  - "PatrickScript stepper template"
+  - "PatrickScript visualgo HTML"
+@scry.entry.end -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PatrickScript · Play</title>
+<meta name="description" content="Step through PatrickScript programs one opcode at a time — a visualgo-style web visualizer with live stack, memory, and I/O.">
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg2: #161922;
+    --bg3: #1d2230;
+    --fg: #e9ecf2;
+    --dim: #9aa3b2;
+    --warm: #f0b366;
+    --accent: #6fb3ff;
+    --good: #7adfb0;
+    --bad:  #f08080;
+    --pc:   #ffd97a;
+    --border: #2a3040;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #fafafa;
+      --bg2: #ffffff;
+      --bg3: #f0f2f7;
+      --fg: #1b1f27;
+      --dim: #5b6573;
+      --warm: #b3690a;
+      --accent: #1f6feb;
+      --good: #138a4b;
+      --bad: #c2410c;
+      --pc: #c98a00;
+      --border: #d8dde6;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: var(--bg); color: var(--fg);
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  header {
+    display: flex; align-items: baseline; gap: 1rem;
+    padding: 0.8rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  header h1 {
+    margin: 0; font-size: 1.05rem; font-weight: 600;
+  }
+  header h1 a { color: var(--fg); text-decoration: none; }
+  header h1 a:hover { color: var(--accent); }
+  header .subtitle { color: var(--dim); font-size: 0.85rem; }
+  header .right {
+    margin-left: auto;
+    display: flex; gap: 1rem; align-items: baseline;
+  }
+  header .right a {
+    color: var(--dim);
+    text-decoration: none;
+    font-size: 0.85rem;
+    border-bottom: 1px dotted var(--dim);
+  }
+  header .right a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .controls {
+    display: flex; align-items: center; gap: 0.5rem;
+    flex-wrap: wrap;
+    padding: 0.6rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+  .controls button, .controls select {
+    background: var(--bg3); color: var(--fg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.35rem 0.7rem;
+    font: inherit;
+    cursor: pointer;
+  }
+  .controls button:hover { border-color: var(--accent); }
+  .controls button:disabled {
+    opacity: 0.45; cursor: not-allowed;
+  }
+  .controls button.primary {
+    background: var(--accent); color: var(--bg);
+    border-color: var(--accent); font-weight: 600;
+  }
+  .controls button.primary:hover { filter: brightness(1.08); }
+  .controls .sep {
+    width: 1px; height: 1.5rem; background: var(--border);
+    margin: 0 0.3rem;
+  }
+  .controls label {
+    color: var(--dim); font-size: 0.9rem;
+  }
+  .controls input[type=range] { width: 8rem; }
+  .controls .speed-label {
+    color: var(--fg);
+    min-width: 3.5ch; text-align: right;
+  }
+  .controls .status {
+    margin-left: auto;
+    color: var(--dim);
+    font-size: 0.86rem;
+  }
+  .controls .status .pill {
+    display: inline-block;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 0.1rem 0.55rem;
+    margin-left: 0.4rem;
+    font-size: 0.82rem;
+    color: var(--fg);
+    background: var(--bg3);
+  }
+  .controls .status .pill.running { color: var(--good); border-color: var(--good); }
+  .controls .status .pill.halted  { color: var(--accent); border-color: var(--accent); }
+  .controls .status .pill.error   { color: var(--bad); border-color: var(--bad); }
+
+  main {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr;
+    gap: 0;
+    height: calc(100vh - 110px);
+    min-height: 480px;
+  }
+  @media (max-width: 900px) {
+    main {
+      grid-template-columns: 1fr;
+      height: auto;
+    }
+  }
+  .pane {
+    border-right: 1px solid var(--border);
+    overflow: auto;
+    padding: 0.6rem 0.9rem;
+  }
+  .pane:last-child { border-right: none; }
+  .pane h2 {
+    margin: 0 0 0.4rem 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--dim);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.3rem;
+  }
+
+  .right-panes {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+    height: 100%;
+  }
+  .right-panes .pane { border-bottom: 1px solid var(--border); border-right: none; }
+  .right-panes .pane:last-child { border-bottom: none; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+  }
+
+  /* Source pane */
+  #source-pane pre {
+    margin: 0;
+    white-space: pre;
+    font: inherit;
+  }
+  .src-line {
+    display: block;
+    padding: 0.05rem 0.5rem;
+    border-left: 2px solid transparent;
+    color: var(--fg);
+  }
+  .src-line .idx {
+    color: var(--dim); margin-right: 0.7rem; user-select: none;
+  }
+  .src-line .mnemonic { color: var(--fg); }
+  .src-line .mnemonic.fam-PUSH,
+  .src-line .mnemonic.fam-PUSHN { color: var(--good); }
+  .src-line .mnemonic.fam-JUMP,
+  .src-line .mnemonic.fam-JUMPZ,
+  .src-line .mnemonic.fam-JUMPNZ,
+  .src-line .mnemonic.fam-CALL,
+  .src-line .mnemonic.fam-RET   { color: var(--warm); }
+  .src-line .mnemonic.fam-HALT  { color: var(--bad); }
+  .src-line .mnemonic.fam-LOAD,
+  .src-line .mnemonic.fam-STORE { color: var(--accent); }
+  .src-line .desc { color: var(--dim); margin-left: 1.2ch; }
+  .src-line.current {
+    background: rgba(255, 217, 122, 0.08);
+    border-left-color: var(--pc);
+    font-weight: 600;
+  }
+  .src-line.last {
+    background: rgba(122, 223, 176, 0.05);
+  }
+
+  /* Stack pane */
+  .stack-wrap {
+    display: flex; flex-direction: column-reverse;
+    gap: 0.2rem;
+    align-items: flex-start;
+    margin-top: 0.2rem;
+  }
+  .stack-cell {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.18rem 0.7rem;
+    min-width: 5ch;
+    text-align: right;
+  }
+  .stack-cell.top {
+    border-color: var(--pc);
+    background: rgba(255, 217, 122, 0.08);
+  }
+  .stack-empty { color: var(--dim); font-style: italic; }
+
+  /* Memory pane */
+  .mem-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 0.2rem;
+    font: inherit;
+  }
+  .mem-table th, .mem-table td {
+    padding: 0.12rem 0.55rem;
+    text-align: right;
+    border-bottom: 1px dotted var(--border);
+  }
+  .mem-table th {
+    color: var(--dim);
+    font-weight: normal;
+    text-transform: uppercase;
+    font-size: 0.78rem;
+    border-bottom-style: solid;
+  }
+  .mem-table td.addr { color: var(--dim); }
+  .mem-table td.ascii { color: var(--warm); text-align: left; }
+  .mem-empty { color: var(--dim); font-style: italic; }
+
+  /* IO pane */
+  .io-row { margin-top: 0.35rem; }
+  .io-row .io-label { color: var(--dim); margin-right: 0.6rem; }
+  .io-row .io-value {
+    color: var(--fg);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.1rem 0.45rem;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .io-row .io-value.empty { color: var(--dim); font-style: italic; }
+
+  footer {
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    padding: 0.5rem 1.1rem;
+    color: var(--dim);
+    font-size: 0.82rem;
+  }
+  footer a { color: var(--dim); text-decoration: underline; }
+  footer a:hover { color: var(--accent); }
+
+  /* Reduced motion override - already no animations, but be explicit */
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><a href="/">PatrickScript</a> <span class="subtitle">· play</span></h1>
+  <div class="right">
+    <a href="/">spec</a>
+    <a href="https://github.com/prmichaelsen/patrick-script">github</a>
+  </div>
+</header>
+
+<div class="controls">
+  <label for="example-select">example</label>
+  <select id="example-select" aria-label="choose example program"></select>
+  <span class="sep"></span>
+  <button id="btn-run" class="primary" title="Run to halt (or pause)">▶ run</button>
+  <button id="btn-step" title="Step one opcode">⏭ step</button>
+  <button id="btn-reset" title="Reset to start">⏮ reset</button>
+  <span class="sep"></span>
+  <label for="speed">speed</label>
+  <input id="speed" type="range" min="0" max="6" value="3" step="1" aria-label="step delay">
+  <span id="speed-label" class="speed-label">8×</span>
+  <span class="status">
+    pc: <span class="pill" id="pc-pill">0</span>
+    steps: <span class="pill" id="steps-pill">0</span>
+    status: <span class="pill halted" id="status-pill">ready</span>
+  </span>
+</div>
+
+<main>
+  <section id="source-pane" class="pane">
+    <h2>source <span style="text-transform:none; font-weight:normal; color:var(--dim);">· disassembled</span></h2>
+    <pre id="source-listing">(loading…)</pre>
+  </section>
+  <div class="right-panes">
+    <section id="state-pane" class="pane">
+      <h2>state</h2>
+      <div class="row">
+        <div>
+          <h2 style="border:none; padding:0; margin-top:0.6rem;">stack <span style="color:var(--dim); font-weight:normal;">· top first</span></h2>
+          <div id="stack-view" class="stack-wrap"></div>
+        </div>
+        <div>
+          <h2 style="border:none; padding:0; margin-top:0.6rem;">memory <span style="color:var(--dim); font-weight:normal;">· non-zero</span></h2>
+          <table id="mem-view" class="mem-table">
+            <thead><tr><th>addr</th><th>val</th><th>char</th></tr></thead>
+            <tbody><tr><td colspan="3" class="mem-empty">(empty)</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+    <section id="io-pane" class="pane">
+      <h2>I/O</h2>
+      <div class="io-row">
+        <span class="io-label">stdin remaining:</span>
+        <span id="stdin-view" class="io-value empty">(none)</span>
+      </div>
+      <div class="io-row">
+        <span class="io-label">stdout:</span>
+        <span id="stdout-view" class="io-value empty">(none)</span>
+      </div>
+      <div class="io-row">
+        <span class="io-label">last instr:</span>
+        <span id="last-instr-view" class="io-value empty">(none)</span>
+      </div>
+      <div class="io-row" id="error-row" style="display:none;">
+        <span class="io-label" style="color:var(--bad);">error:</span>
+        <span id="error-view" class="io-value" style="color:var(--bad);"></span>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  Visualizer for the PatrickScript v1.3.0 reference interpreter. Source: <a href="https://github.com/prmichaelsen/patrick-script/blob/main/site/js/ps-interpreter.ts"><code>site/js/ps-interpreter.ts</code></a>. Two-token alphabet: <code>patrick</code> + space. Deep-link by hash: <code>/play#brainfuck</code>.
+</footer>
+
+<!-- Compiled interpreter (IIFE, exposes window.PS). -->
+<script>
+"use strict";var PS=(()=>{var u=Object.defineProperty;var y=Object.getOwnPropertyDescriptor;var b=Object.getOwnPropertyNames;var O=Object.prototype.hasOwnProperty;var w=(r,n)=>{for(var e in n)u(r,e,{get:n[e],enumerable:!0})},E=(r,n,e,s)=>{if(n&&typeof n=="object"||typeof n=="function")for(let t of b(n))!O.call(r,t)&&t!==e&&u(r,t,{get:()=>n[t],enumerable:!(s=y(n,t))||s.enumerable});return r};var k=r=>E(u({},"__esModule",{value:!0}),r);var x={};w(x,{Interpreter:()=>c,ParseError:()=>o,WORD_LEN:()=>p,WORD_TOKEN:()=>h,disassemble:()=>M,mnemonicOf:()=>l,parse:()=>f});var h="patrick",p=h.length,o=class extends Error{position;constructor(n,e){super(e),this.position=n,this.name="ParseError"}};function f(r){if(!r)return[];let n=[],e=r.length,s=0;for(;s<e;){if(r.substr(s,p)!==h)throw new o(s,`unexpected token near '${r.substr(Math.max(0,s-10),20).replace(/\n/g,"\\n")}'`);let t=0;for(;s<e&&r.substr(s,p)===h;)t+=1,s+=p;let i=0;for(;s<e&&r.charAt(s)===" ";)i+=1,s+=1;if(s<e&&r.charAt(s)!=="p")throw new o(s,`unexpected token near '${r.substr(Math.max(0,s-10),20).replace(/\n/g,"\\n")}'`);let a=Math.max(i-1,0);n.push({arity:t,gapArg:a})}return n}var m={"1,*":{family:"PUSH",template:"PUSH n",description:"push immediate n",hasOperand:!0},"2,0":{family:"POP",template:"POP",description:"discard top",hasOperand:!1},"2,1":{family:"DUP",template:"DUP",description:"duplicate top",hasOperand:!1},"2,2":{family:"SWAP",template:"SWAP",description:"swap top two",hasOperand:!1},"2,3":{family:"ROT",template:"ROT",description:"rotate top three",hasOperand:!1},"3,0":{family:"ADD",template:"ADD",description:"a b \u2192 a+b",hasOperand:!1},"3,1":{family:"SUB",template:"SUB",description:"a b \u2192 a-b",hasOperand:!1},"3,2":{family:"MUL",template:"MUL",description:"a b \u2192 a*b",hasOperand:!1},"3,3":{family:"DIV",template:"DIV",description:"a b \u2192 floor(a/b)",hasOperand:!1},"3,4":{family:"MOD",template:"MOD",description:"a b \u2192 a mod b",hasOperand:!1},"3,5":{family:"NEG",template:"NEG",description:"a \u2192 -a",hasOperand:!1},"4,0":{family:"EQ",template:"EQ",description:"a b \u2192 (a==b)",hasOperand:!1},"4,1":{family:"LT",template:"LT",description:"a b \u2192 (a<b)",hasOperand:!1},"4,2":{family:"GT",template:"GT",description:"a b \u2192 (a>b)",hasOperand:!1},"4,3":{family:"AND",template:"AND",description:"a b \u2192 a&b",hasOperand:!1},"4,4":{family:"OR",template:"OR",description:"a b \u2192 a|b",hasOperand:!1},"4,5":{family:"XOR",template:"XOR",description:"a b \u2192 a^b",hasOperand:!1},"4,6":{family:"NOT",template:"NOT",description:"a \u2192 ~a",hasOperand:!1},"5,*":{family:"JUMP",template:"JUMP n",description:"jump to instruction n",hasOperand:!0},"6,*":{family:"JUMPZ",template:"JUMPZ n",description:"if top==0, jump to n",hasOperand:!0},"7,*":{family:"JUMPNZ",template:"JUMPNZ n",description:"if top!=0, jump to n",hasOperand:!0},"8,0":{family:"INCHAR",template:"INCHAR",description:"read byte \u2192 stack",hasOperand:!1},"8,1":{family:"OUTCHAR",template:"OUTCHAR",description:"pop \u2192 write byte",hasOperand:!1},"8,2":{family:"INNUM",template:"INNUM",description:"read int \u2192 stack",hasOperand:!1},"8,3":{family:"OUTNUM",template:"OUTNUM",description:"pop \u2192 write int+newline",hasOperand:!1},"9,0":{family:"LOAD",template:"LOAD",description:"pop addr \u2192 push mem[addr]",hasOperand:!1},"9,1":{family:"STORE",template:"STORE",description:"pop val addr \u2192 mem[addr]=val",hasOperand:!1},"10,*":{family:"HALT",template:"HALT",description:"terminate",hasOperand:!1},"11,*":{family:"CALL",template:"CALL n",description:"push return addr; jump to n",hasOperand:!0},"12,*":{family:"RET",template:"RET",description:"pop return addr; jump there",hasOperand:!1},"13,*":{family:"PUSHN",template:"PUSHN n",description:"push -n (negative immediate)",hasOperand:!0},"14,*":{family:"PICK",template:"PICK n",description:"copy n-th element from top",hasOperand:!0}};function l(r){let n=`${r.arity},${r.gapArg}`,e=`${r.arity},*`,s=m[n]??m[e];return s?{mnemonic:s.hasOperand?s.template.replace("n",String(r.gapArg)):s.template,description:s.description,family:s.family}:{mnemonic:"???",description:`arity=${r.arity} gap_arg=${r.gapArg}`,family:"???"}}function M(r){return r.map((n,e)=>{let{mnemonic:s,description:t}=l(n);return`${String(e).padStart(4)}  ${s.padEnd(16)}  ; ${t}`})}var c=class{instructions=[];stack=[];memory=new Map;stdinBuf=[];stdoutBuf=[];ip=0;steps=0;status="running";err;lastExecuted=null;constructor(n,e=""){this.reset(n,e)}reset(n,e=""){this.instructions=f(n),this.stack=[],this.memory=new Map,this.stdinBuf=$(e),this.stdoutBuf=[],this.ip=0,this.steps=0,this.status=this.instructions.length===0?"halted":"running",this.err=void 0,this.lastExecuted=null}program(){return this.instructions}state(){return{ip:this.ip,stack:[...this.stack],memory:Object.fromEntries(this.memory),stdin:[...this.stdinBuf],stdout:[...this.stdoutBuf],status:this.status,error:this.err,lastExecuted:this.lastExecuted,steps:this.steps}}stdoutText(){return new TextDecoder("utf-8",{fatal:!1}).decode(new Uint8Array(this.stdoutBuf))}run(n=1/0){let e=n;for(;this.status==="running"&&e>0;)this.step(),e-=1;return this.state()}step(){if(this.status!=="running")return this.state();if(this.ip>=this.instructions.length)return this.status="halted",this.state();let n=this.ip,{arity:e,gapArg:s}=this.instructions[n];this.ip+=1,this.steps+=1;try{this.execOne(e,s)}catch(i){let a=i instanceof Error?i.message:String(i);this.status="error",this.err=a}let t=l({arity:e,gapArg:s}).mnemonic;return this.lastExecuted={idx:n,arity:e,gapArg:s,mnemonic:t},this.status==="running"&&this.ip>=this.instructions.length&&(this.status="halted"),this.state()}pop(){if(this.stack.length===0)throw new Error("stack underflow");return this.stack.pop()}execOne(n,e){let s=this.instructions.length;switch(n){case 1:this.stack.push(e);return;case 2:if(e===0){this.pop();return}if(e===1){let t=this.pop();this.stack.push(t,t);return}if(e===2){let t=this.pop(),i=this.pop();this.stack.push(t,i);return}if(e===3){let t=this.pop(),i=this.pop(),a=this.pop();this.stack.push(i,t,a);return}throw new Error(`illegal gap_arg ${e} for arity 2 at instruction ${this.ip-1}`);case 3:if(e===5){let t=this.pop();this.stack.push(-t);return}if(e<=4){let t=this.pop(),i=this.pop();if(e===0){this.stack.push(i+t);return}if(e===1){this.stack.push(i-t);return}if(e===2){this.stack.push(i*t);return}if(e===3){if(t===0)throw new Error("division by zero (DIV)");this.stack.push(Math.floor(i/t));return}if(e===4){if(t===0)throw new Error("division by zero (MOD)");this.stack.push(i-t*Math.floor(i/t));return}}throw new Error(`illegal gap_arg ${e} for arity 3 at instruction ${this.ip-1}`);case 4:if(e===6){let t=this.pop();this.stack.push(~t);return}if(e<=5){let t=this.pop(),i=this.pop();if(e===0){this.stack.push(i===t?1:0);return}if(e===1){this.stack.push(i<t?1:0);return}if(e===2){this.stack.push(i>t?1:0);return}if(e===3){this.stack.push(i&t);return}if(e===4){this.stack.push(i|t);return}if(e===5){this.stack.push(i^t);return}}throw new Error(`illegal gap_arg ${e} for arity 4 at instruction ${this.ip-1}`);case 5:{let t=e;if(t>=s)throw new Error(`JUMP target ${t} out of bounds (program length ${s})`);this.ip=t;return}case 6:{let t=this.pop(),i=e;if(t===0){if(i>=s)throw new Error(`JUMPZ target ${i} out of bounds (program length ${s})`);this.ip=i}return}case 7:{let t=this.pop(),i=e;if(t!==0){if(i>=s)throw new Error(`JUMPNZ target ${i} out of bounds (program length ${s})`);this.ip=i}return}case 8:if(e===0){let t=this.stdinBuf.shift();this.stack.push(t===void 0?-1:t);return}if(e===1){let t=this.pop();this.stdoutBuf.push((t%256+256)%256);return}if(e===2){if(this.stdinBuf.length===0){this.stack.push(-1);return}let t="";for(;this.stdinBuf.length>0;){let d=this.stdinBuf.shift();if(d===10)break;t+=String.fromCharCode(d)}let i=t.trim(),a=Number.parseInt(i,10);Number.isNaN(a)||!/^-?\d+$/.test(i)?this.stack.push(-1):this.stack.push(a);return}if(e===3){let t=this.pop();for(let i of String(t))this.stdoutBuf.push(i.charCodeAt(0));this.stdoutBuf.push(10);return}throw new Error(`illegal gap_arg ${e} for arity 8 at instruction ${this.ip-1}`);case 9:if(e===0){let t=this.pop();this.stack.push(this.memory.get(t)??0);return}if(e===1){let t=this.pop(),i=this.pop();this.memory.set(t,i);return}throw new Error(`illegal gap_arg ${e} for arity 9 at instruction ${this.ip-1}`);case 10:this.status="halted";return;case 11:{let t=e;if(t>=s)throw new Error(`CALL target ${t} out of bounds (program length ${s})`);this.stack.push(this.ip),this.ip=t;return}case 12:{let t=this.pop();if(t<0||t>s)throw new Error(`RET target ${t} out of bounds (program length ${s})`);this.ip=t;return}case 13:this.stack.push(-e);return;case 14:{let t=this.stack.length;if(e>=t)throw new Error(`PICK ${e}: stack underflow (depth=${t})`);this.stack.push(this.stack[t-1-e]);return}default:throw new Error(`illegal instruction arity ${n} at instruction ${this.ip-1} (arities 15+ are reserved)`)}}};function $(r){if(typeof r=="string"){let n=new TextEncoder().encode(r);return Array.from(n)}return r instanceof Uint8Array?Array.from(r):[...r]}return k(x);})();
+
+</script>
+
+<!-- Examples table and UI controller. -->
+<script>
+const EXAMPLES = {"hello-world": {"label": "hello world", "source": "patrick                                                                         patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                             patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                             patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                             patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                 patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                        patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                             patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                     patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick           patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick ", "stdin": ""}, "fibonacci": {"label": "fibonacci (first 10)", "source": "patrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick           patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick    patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrick patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick  patrickpatrick  patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrick          patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick ", "stdin": ""}, "factorial-recursive": {"label": "factorial (recursive)", "source": "patrick      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick     patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick    patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick   patrickpatrick  patrick  patrickpatrickpatrickpatrick   patrickpatrickpatrickpatrickpatrickpatrick                 patrickpatrick  patrick  patrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick     patrickpatrickpatrick   patrickpatrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick patrick  patrickpatrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick ", "stdin": ""}, "fizzbuzz": {"label": "fizzbuzz (1..15)", "source": "patrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick                patrickpatrickpatrickpatrick   patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                            patrick patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick    patrickpatrickpatrick     patrickpatrickpatrickpatrickpatrickpatrickpatrick                            patrick                                                                       patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                          patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                           patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                           patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick      patrickpatrickpatrick     patrickpatrickpatrickpatrickpatrickpatrickpatrick                                            patrick                                                                   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                           patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick                                                                                                                           patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                   patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick    patrickpatrickpatrickpatrickpatrick                                                     patrick           patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick    patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick ", "stdin": ""}, "brainfuck": {"label": "brainfuck interpreter (reads BF program from stdin)", "source": "patrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick  patrick  patrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrick                                 patrickpatrick  patrick                                  patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                               patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick    patrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick          patrickpatrick patrickpatrickpatrickpatrickpatrick                                  patrickpatrick patrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrick   patrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                                            patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick    patrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick  patrick                                            patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                               patrickpatrick  patrick                                              patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                            patrickpatrick  patrick                                                               patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                         patrickpatrick  patrick                                                             patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                 patrickpatrick  patrick                                                                                            patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                           patrickpatrick  patrick                                                                                              patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                    patrickpatrick  patrick                                               patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                         patrickpatrick  patrick                                             patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                  patrickpatrick patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrick      patrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrick      patrickpatrick  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick  patrickpatrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick  patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrick      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrick      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrick      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                    patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrickpatrick patrick   patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrick      patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                             patrickpatrickpatrickpatrickpatrick                                                                                                                                                             patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrickpatrick  patrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                           patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick    patrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick  patrick                                                                                            patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                            patrickpatrick  patrick                                                                                              patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                patrickpatrick patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                    patrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                    patrickpatrick patrick  patrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                    patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                                           patrickpatrick patrickpatrickpatrickpatrickpatrick                                  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrick  patrickpatrick  patrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                                    patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick    patrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrickpatrick  patrick                                                                                              patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                     patrickpatrick  patrick                                                                                            patrickpatrickpatrickpatrick patrickpatrickpatrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                         patrickpatrick patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                             patrickpatrick patrick  patrickpatrickpatrick patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                             patrickpatrick patrick  patrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                                             patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick  patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                                                                                                                                                                                                    patrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick patrick  patrickpatrickpatrick patrick patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick  patrickpatrickpatrickpatrickpatrick                                  patrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrickpatrick ", "stdin": "++++++++[>++++[>++>+++>+++>+<<<<-]>+>+>->>+[<]<-]>>.>---.+++++++..+++.>>.<-.<.+++.------.--------.>>+.>++."}};
+const EXAMPLE_ORDER = ["hello-world", "fibonacci", "factorial-recursive", "fizzbuzz", "brainfuck"];
+
+// Speed levels (ms-per-step). Index 0 = slowest, last = "instant".
+const SPEED_LEVELS_MS = [500, 250, 120, 60, 30, 12, 0];
+const SPEED_LABELS    = ['1×',  '2×',  '4×',  '8×','16×','32×','∞'];
+
+const $ = (id) => document.getElementById(id);
+
+let interp = null;
+let runHandle = null;       // setTimeout / rAF handle when auto-running
+let currentSlug = null;
+let speedIdx = 3;           // matches initial range value
+
+function init() {
+  const sel = $('example-select');
+  for (const slug of EXAMPLE_ORDER) {
+    const opt = document.createElement('option');
+    opt.value = slug;
+    opt.textContent = EXAMPLES[slug].label || slug;
+    sel.appendChild(opt);
+  }
+  sel.addEventListener('change', () => {
+    loadExample(sel.value, /*pushHash=*/true);
+  });
+
+  $('btn-run').addEventListener('click', toggleRun);
+  $('btn-step').addEventListener('click', () => { stopAuto(); doStep(); render(); });
+  $('btn-reset').addEventListener('click', () => { stopAuto(); doReset(); render(); });
+  $('speed').addEventListener('input', (e) => {
+    speedIdx = parseInt(e.target.value, 10);
+    $('speed-label').textContent = SPEED_LABELS[speedIdx];
+    // If auto-running, restart the loop with the new delay
+    if (runHandle !== null) {
+      stopAuto();
+      startAuto();
+    }
+  });
+
+  window.addEventListener('hashchange', applyHash);
+
+  // Default speed label
+  $('speed-label').textContent = SPEED_LABELS[speedIdx];
+
+  applyHash();
+}
+
+function applyHash() {
+  const slug = (location.hash || '').replace(/^#/, '');
+  const target = (slug && EXAMPLES[slug]) ? slug : EXAMPLE_ORDER[0];
+  if (target !== currentSlug) {
+    $('example-select').value = target;
+    loadExample(target, /*pushHash=*/false);
+  }
+}
+
+function loadExample(slug, pushHash) {
+  stopAuto();
+  currentSlug = slug;
+  if (pushHash) {
+    if (location.hash !== '#' + slug) {
+      history.replaceState(null, '', '#' + slug);
+    }
+  }
+  const ex = EXAMPLES[slug];
+  interp = new PS.Interpreter(ex.source, ex.stdin || '');
+  render(/*firstLoad=*/true);
+}
+
+function doStep() {
+  if (!interp) return;
+  const st = interp.state();
+  if (st.status !== 'running') return;
+  interp.step();
+}
+
+function doReset() {
+  const ex = EXAMPLES[currentSlug];
+  if (!ex) return;
+  interp.reset(ex.source, ex.stdin || '');
+}
+
+function toggleRun() {
+  if (runHandle !== null) {
+    stopAuto();
+    render();
+  } else {
+    // If halted/errored, reset first
+    const st = interp.state();
+    if (st.status !== 'running') {
+      doReset();
+    }
+    startAuto();
+  }
+}
+
+function startAuto() {
+  const delay = SPEED_LEVELS_MS[speedIdx];
+  $('btn-run').textContent = '⏸ pause';
+  $('btn-run').classList.remove('primary');
+  if (delay === 0) {
+    // "Instant" mode: run to completion in a tight loop (chunked to keep UI alive).
+    runChunk();
+  } else {
+    runHandle = setInterval(() => {
+      const st = interp.state();
+      if (st.status !== 'running') { stopAuto(); render(); return; }
+      interp.step();
+      render();
+    }, delay);
+  }
+}
+
+function runChunk() {
+  // Process up to N steps per frame; render once per frame.
+  const N = 2000;
+  runHandle = -1; // sentinel: we're running in instant mode
+  let chunk = 0;
+  while (chunk < N) {
+    const st = interp.state();
+    if (st.status !== 'running') break;
+    interp.step();
+    chunk += 1;
+  }
+  render();
+  const st = interp.state();
+  if (st.status === 'running' && runHandle === -1) {
+    requestAnimationFrame(runChunk);
+  } else {
+    stopAuto();
+  }
+}
+
+function stopAuto() {
+  if (runHandle !== null && runHandle !== -1) {
+    clearInterval(runHandle);
+  }
+  runHandle = null;
+  $('btn-run').textContent = '▶ run';
+  $('btn-run').classList.add('primary');
+}
+
+function render() {
+  if (!interp) return;
+  const st = interp.state();
+  const program = interp.program();
+
+  // --- source listing
+  const srcEl = $('source-listing');
+  if (srcEl.dataset.slug !== currentSlug) {
+    srcEl.innerHTML = '';
+    for (let i = 0; i < program.length; i++) {
+      const m = PS.mnemonicOf(program[i]);
+      const span = document.createElement('span');
+      span.className = 'src-line';
+      span.dataset.idx = String(i);
+      const idxStr = String(i).padStart(4, ' ');
+      span.innerHTML =
+        '<span class="idx">' + escapeHtml(idxStr) + '</span>' +
+        '<span class="mnemonic fam-' + escapeAttr(m.family) + '">' + escapeHtml(m.mnemonic.padEnd(12, ' ')) + '</span>' +
+        '<span class="desc">; ' + escapeHtml(m.description) + '</span>' +
+        '\n';
+      srcEl.appendChild(span);
+    }
+    srcEl.dataset.slug = currentSlug;
+  }
+  // Highlight current PC and last-executed
+  for (const node of srcEl.querySelectorAll('.src-line')) {
+    node.classList.remove('current', 'last');
+  }
+  if (st.ip < program.length) {
+    const curEl = srcEl.querySelector('[data-idx="' + st.ip + '"]');
+    if (curEl) {
+      curEl.classList.add('current');
+      // Scroll to keep PC visible (no animation, just instant)
+      const pane = $('source-pane');
+      const r = curEl.getBoundingClientRect();
+      const p = pane.getBoundingClientRect();
+      if (r.top < p.top + 30 || r.bottom > p.bottom - 30) {
+        curEl.scrollIntoView({ block: 'center', inline: 'nearest' });
+      }
+    }
+  }
+  if (st.lastExecuted) {
+    const lastEl = srcEl.querySelector('[data-idx="' + st.lastExecuted.idx + '"]');
+    if (lastEl && lastEl !== srcEl.querySelector('.current')) {
+      lastEl.classList.add('last');
+    }
+  }
+
+  // --- stack
+  const stackWrap = $('stack-view');
+  stackWrap.innerHTML = '';
+  if (st.stack.length === 0) {
+    const e = document.createElement('div');
+    e.className = 'stack-empty';
+    e.textContent = '(empty)';
+    stackWrap.appendChild(e);
+  } else {
+    for (let i = 0; i < st.stack.length; i++) {
+      const v = st.stack[i];
+      const c = document.createElement('div');
+      c.className = 'stack-cell' + (i === st.stack.length - 1 ? ' top' : '');
+      c.textContent = String(v);
+      stackWrap.appendChild(c);
+    }
+  }
+
+  // --- memory
+  const memTbody = $('mem-view').querySelector('tbody');
+  memTbody.innerHTML = '';
+  const memKeys = Object.keys(st.memory).map(Number).sort((a,b) => a-b);
+  if (memKeys.length === 0) {
+    memTbody.innerHTML = '<tr><td colspan="3" class="mem-empty">(empty)</td></tr>';
+  } else {
+    for (const k of memKeys) {
+      const v = st.memory[k];
+      const tr = document.createElement('tr');
+      const asciiCell = (v >= 32 && v <= 126)
+        ? "'" + String.fromCharCode(v).replace(/'/g, "\\'") + "'"
+        : (v === 10 ? "'\\n'" : '');
+      tr.innerHTML =
+        '<td class="addr">' + escapeHtml(String(k)) + '</td>' +
+        '<td>' + escapeHtml(String(v)) + '</td>' +
+        '<td class="ascii">' + escapeHtml(asciiCell) + '</td>';
+      memTbody.appendChild(tr);
+    }
+  }
+
+  // --- IO
+  const stdinView = $('stdin-view');
+  if (st.stdin.length === 0) {
+    stdinView.classList.add('empty');
+    stdinView.textContent = '(none)';
+  } else {
+    stdinView.classList.remove('empty');
+    stdinView.textContent = bytesToDisplay(st.stdin);
+  }
+  const stdoutView = $('stdout-view');
+  if (st.stdout.length === 0) {
+    stdoutView.classList.add('empty');
+    stdoutView.textContent = '(none)';
+  } else {
+    stdoutView.classList.remove('empty');
+    stdoutView.textContent = bytesToDisplay(st.stdout);
+  }
+  const lastView = $('last-instr-view');
+  if (st.lastExecuted) {
+    lastView.classList.remove('empty');
+    lastView.textContent = '@' + st.lastExecuted.idx + '  ' + st.lastExecuted.mnemonic;
+  } else {
+    lastView.classList.add('empty');
+    lastView.textContent = '(none)';
+  }
+  const errRow = $('error-row');
+  if (st.status === 'error' && st.error) {
+    errRow.style.display = '';
+    $('error-view').textContent = st.error;
+  } else {
+    errRow.style.display = 'none';
+  }
+
+  // --- pills + button state
+  $('pc-pill').textContent = String(st.ip);
+  $('steps-pill').textContent = String(st.steps);
+  const sp = $('status-pill');
+  sp.textContent = st.status;
+  sp.classList.remove('running', 'halted', 'error');
+  sp.classList.add(st.status);
+
+  const halted = (st.status !== 'running');
+  $('btn-step').disabled = halted;
+}
+
+function bytesToDisplay(bytes) {
+  const dec = new TextDecoder('utf-8', { fatal: false });
+  const s = dec.decode(new Uint8Array(bytes));
+  return s.replace(/\r/g, '');
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function escapeAttr(s) {
+  return s.replace(/[^A-Za-z0-9_-]/g,'_');
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+</script>
+
+</body>
+</html>
