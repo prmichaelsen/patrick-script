@@ -1,0 +1,76 @@
+# @scry.entry
+# id: code.patrickscript-ci-workflow~49cba2a9
+# kind: code
+# status: active
+# weight: 0.85
+# tags:
+#   - "topic:patrickscript"
+#   - "patrickscript"
+#   - "topic:ci"
+#   - "ci"
+#   - "topic:conformance"
+#   - "conformance"
+#   - "scope:patrick-script"
+#   - "patrick-script"
+#   - "github-actions"
+# summary: >
+#   GitHub Actions CI workflow for the patrick-script project. Runs on
+#   every push and pull request: executes the Python pytest suite AND
+#   the TypeScript conformance harness, asserting byte-equal stdout
+#   across the two interpreters for every corpus program. Gates merge
+#   on parity — any divergence between ps.py and ps-interpreter.ts
+#   fails the build before reaching origin/main.
+#   Also: ci.yml, GitHub Actions, conformance gating, TS Python parity,
+#   PatrickScript CI, npx tsx, pytest CI, corpus parity check.
+# rationale: >
+#   The TS interpreter port is only credible as a reference implementation
+#   if a mechanical check enforces parity with the Python interpreter on
+#   every change. Tag-triggered publish.yml runs pytest on release; this
+#   workflow runs the full parity check on every push/PR so drift is caught
+#   at review time, not at release time.
+# applies: gating PRs on conformance, validating ps-interpreter.ts changes, ensuring TS Python parity, debugging CI test failures
+# seeded_questions:
+#   - "How does CI verify PatrickScript TS Python parity?"
+#   - "Where does the conformance harness run in CI?"
+#   - "What workflow runs on every push to patrick-script?"
+#   - "PatrickScript GitHub Actions setup"
+# @scry.entry.end
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Python pytest + TS conformance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Sync Python dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Run Python pytest
+        run: uv run pytest
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run TS conformance (TS vs corpus/*.expected)
+        working-directory: site/js
+        run: npx --yes tsx conformance.ts
