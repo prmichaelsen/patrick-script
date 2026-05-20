@@ -11,17 +11,18 @@
   "repository": {
     "word": {
       "match": "(?:patrick)+",
-      "name": "entity.name.tag.word.patrickscript",
-      "comment": "Maximal run of 'patrick' tokens. Per-arity semantic coloring is applied by the extension's semantic-tokens provider; this scope is the textmate fallback."
+      "name": "entity.name.tag.word.ps",
+      "comment": "Maximal run of 'patrick' tokens. Per-arity semantic coloring is applied by the extension's semantic-tokens provider; this scope is the TextMate fallback when semantic tokens are unavailable."
     },
     "gap": {
       "match": " +",
-      "name": "punctuation.whitespace.gap.patrickscript",
-      "comment": "Maximal run of single-space tokens. gap_width minus 1 is the immediate argument."
+      "name": "punctuation.whitespace.gap.ps",
+      "comment": "Maximal run of single-space tokens. gap_width minus 1 is the instruction's immediate argument."
     },
     "illegal": {
-      "match": "[^patrick ]+",
-      "name": "invalid.illegal.patrickscript"
+      "match": "[^ p]+",
+      "name": "invalid.illegal.ps",
+      "comment": "Any byte sequence not consistent with the two-token alphabet. The semantic-tokens / diagnostic surface gives the precise parse error; this is the coarse first-pass red-squiggle."
     }
   }
 }

@@ -1,7 +1,7 @@
 {
   "name": "patrickscript-vscode",
   "displayName": "PatrickScript",
-  "description": "Syntax highlighting, semantic arity-coloring, decoded CodeLens, and hover disassembly for PatrickScript (.ps) and PatrickScript Assembly (.psa). Reuses the official TypeScript interpreter for correctness.",
+  "description": "Syntax highlighting, per-arity semantic coloring, inline disassembly (inlay hints), hover, outline, and parse-error diagnostics for PatrickScript (.ps) and PatrickScript Assembly (.psa). Reuses the official TypeScript interpreter for correctness.",
   "version": "0.1.0",
   "publisher": "patrickscript",
   "repository": {
@@ -57,66 +57,64 @@
       }
     ],
     "semanticTokenTypes": [
-      { "id": "psPush",     "description": "PUSH word (arity 1)" },
-      { "id": "psStack",    "description": "Stack-manipulation word (arity 2)" },
-      { "id": "psArith",    "description": "Arithmetic word (arity 3)" },
-      { "id": "psCmp",      "description": "Comparison/bitwise word (arity 4)" },
-      { "id": "psJump",     "description": "Unconditional JUMP word (arity 5)" },
-      { "id": "psJumpz",    "description": "JUMPZ word (arity 6)" },
-      { "id": "psJumpnz",   "description": "JUMPNZ word (arity 7)" },
-      { "id": "psIo",       "description": "I/O word (arity 8)" },
-      { "id": "psMem",      "description": "Memory word (arity 9)" },
-      { "id": "psHalt",     "description": "HALT word (arity 10)" },
-      { "id": "psCall",     "description": "CALL word (arity 11)" },
-      { "id": "psRet",      "description": "RET word (arity 12)" },
-      { "id": "psPushn",    "description": "PUSHN word (arity 13)" },
-      { "id": "psPick",     "description": "PICK word (arity 14)" },
-      { "id": "psReserved", "description": "Reserved word (arity >= 15)" }
+      { "id": "patrickscript.arity1",  "description": "PUSH word (arity 1)" },
+      { "id": "patrickscript.arity2",  "description": "Stack op word (arity 2: POP/DUP/SWAP/ROT)" },
+      { "id": "patrickscript.arity3",  "description": "Arithmetic word (arity 3: ADD/SUB/MUL/DIV/MOD/NEG)" },
+      { "id": "patrickscript.arity4",  "description": "Comparison/bitwise word (arity 4: EQ/LT/GT/AND/OR/XOR/NOT)" },
+      { "id": "patrickscript.arity5",  "description": "JUMP word (arity 5)" },
+      { "id": "patrickscript.arity6",  "description": "JUMPZ word (arity 6)" },
+      { "id": "patrickscript.arity7",  "description": "JUMPNZ word (arity 7)" },
+      { "id": "patrickscript.arity8",  "description": "I/O word (arity 8: INCHAR/OUTCHAR/INNUM/OUTNUM)" },
+      { "id": "patrickscript.arity9",  "description": "Memory word (arity 9: LOAD/STORE)" },
+      { "id": "patrickscript.arity10", "description": "HALT word (arity 10)" },
+      { "id": "patrickscript.arity11", "description": "CALL word (arity 11)" },
+      { "id": "patrickscript.arity12", "description": "RET word (arity 12)" },
+      { "id": "patrickscript.arity13", "description": "PUSHN word (arity 13)" },
+      { "id": "patrickscript.arity14", "description": "PICK word (arity 14)" }
     ],
     "semanticTokenScopes": [
       {
         "language": "patrickscript",
         "scopes": {
-          "psPush":     ["constant.numeric.ps"],
-          "psStack":    ["variable.other.ps"],
-          "psArith":    ["keyword.operator.arithmetic.ps"],
-          "psCmp":      ["keyword.operator.logical.ps"],
-          "psJump":     ["keyword.control.flow.ps"],
-          "psJumpz":    ["keyword.control.conditional.ps"],
-          "psJumpnz":   ["keyword.control.conditional.ps"],
-          "psIo":       ["support.function.io.ps"],
-          "psMem":      ["storage.modifier.memory.ps"],
-          "psHalt":     ["keyword.control.halt.ps"],
-          "psCall":     ["entity.name.function.call.ps"],
-          "psRet":      ["entity.name.function.return.ps"],
-          "psPushn":    ["constant.numeric.negative.ps"],
-          "psPick":     ["variable.other.pick.ps"],
-          "psReserved": ["invalid.illegal.ps"]
+          "patrickscript.arity1":  ["constant.numeric.ps"],
+          "patrickscript.arity2":  ["variable.other.ps"],
+          "patrickscript.arity3":  ["keyword.operator.arithmetic.ps"],
+          "patrickscript.arity4":  ["keyword.operator.logical.ps"],
+          "patrickscript.arity5":  ["keyword.control.flow.ps"],
+          "patrickscript.arity6":  ["keyword.control.flow.conditional.ps"],
+          "patrickscript.arity7":  ["keyword.control.flow.conditional.ps"],
+          "patrickscript.arity8":  ["support.function.io.ps"],
+          "patrickscript.arity9":  ["storage.modifier.memory.ps"],
+          "patrickscript.arity10": ["keyword.control.halt.ps"],
+          "patrickscript.arity11": ["entity.name.function.call.ps"],
+          "patrickscript.arity12": ["entity.name.function.return.ps"],
+          "patrickscript.arity13": ["constant.numeric.negative.ps"],
+          "patrickscript.arity14": ["variable.other.pick.ps"]
         }
       }
     ],
     "configuration": {
       "title": "PatrickScript",
       "properties": {
+        "patrickscript.inlayHints.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show decoded-instruction inlay hints inline before each `patrick` word in .ps files."
+        },
+        "patrickscript.inlayHints.showOperand": {
+          "type": "boolean",
+          "default": true,
+          "description": "Include the operand value (e.g. `PUSH 5`) in inlay hints; when false, show only the family (`PUSH`)."
+        },
         "patrickscript.semanticTokens.enabled": {
           "type": "boolean",
           "default": true,
           "description": "Colorize each `patrick` word in .ps files by its arity (which is its opcode family)."
         },
-        "patrickscript.codeLens.enabled": {
+        "patrickscript.diagnostics.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Show a decoded-instruction CodeLens above each `patrick` word in .ps files."
-        },
-        "patrickscript.codeLens.showIndex": {
-          "type": "boolean",
-          "default": true,
-          "description": "Include the 0-based instruction index in the CodeLens label."
-        },
-        "patrickscript.hover.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show opcode, operand, and stack effect on hover in .ps files."
+          "description": "Surface PatrickScript parse errors as squigglies."
         }
       }
     }

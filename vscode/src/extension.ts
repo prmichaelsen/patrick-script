@@ -10,34 +10,35 @@
 //   - "vscode-extension"
 //   - "topic:semantic-tokens"
 //   - "semantic-tokens"
-//   - "topic:inlay-hints"
-//   - "inlay-hints"
+//   - "topic:codelens"
+//   - "codelens"
 //   - "scope:patrick-script"
 //   - "patrick-script"
 // summary: >
 //   PatrickScript VS Code extension entry point. Registers three .ps
-//   providers — semantic tokens (length-based coloring by arity), inlay
-//   hints (decoded mnemonic + index per word-run), hover (mnemonic +
-//   description + arity/gap_arg) — all backed by the canonical TypeScript
-//   interpreter at ../site/js/ps-interpreter.ts (esbuild bundles it in;
-//   no fork). .psa is handled by the TextMate grammar at
+//   providers — semantic tokens (per-arity coloring via psPush/psStack/
+//   …/psReserved IDs declared in package.json), CodeLens (decoded mnemonic
+//   anchored above each word-run), hover (mnemonic + description + arity/
+//   gap_arg) — all backed by the canonical TypeScript interpreter at
+//   ../site/js/ps-interpreter.ts (esbuild bundles it in; no fork). .psa
+//   is handled by the TextMate grammar at
 //   syntaxes/patrickscript-assembly.tmLanguage.json. Soft parser
-//   (locateInstructions) keeps highlighting/hints live on malformed input.
+//   (locateInstructions) keeps highlighting/CodeLens live on malformed input.
 //   Also: extension.ts, activate, registerDocumentSemanticTokensProvider,
-//   registerInlayHintsProvider, registerHoverProvider, locateInstructions,
-//   safeLocate, PsSemanticTokensProvider, PsInlayHintsProvider,
-//   PsHoverProvider, CodeLens-vs-inlay decision, .ps single-line.
+//   registerCodeLensProvider, registerHoverProvider, locateInstructions,
+//   safeLocate, PsSemanticTokensProvider, PsCodeLensProvider,
+//   PsHoverProvider, single-line .ps, arity to token type mapping.
 // rationale: >
-//   Without this marker, the extension's surfaces and the
-//   CodeLens→inlay-hints design pivot are invisible to scry meaning-search;
-//   a future wake editing the providers would re-derive both.
-// applies: editing the VS Code extension, debugging .ps highlighting, debugging .ps inlay hints, modifying the soft parser, registering new providers, deciding between CodeLens and InlayHints in VS Code
+//   Without this marker, the extension's surfaces and arity→token-type
+//   mapping are invisible to scry meaning-search; a future wake editing
+//   the providers would re-derive both.
+// applies: editing the VS Code extension, debugging .ps highlighting, debugging .ps CodeLens, modifying the soft parser, registering new providers, mapping arity to semantic token type
 // seeded_questions:
 //   - "Where is the PatrickScript VS Code extension's entry point?"
-//   - "Why does the extension use InlayHints instead of CodeLens?"
+//   - "Which semantic-token type does arity N map to?"
 //   - "How does the extension reuse the shared TypeScript interpreter?"
 //   - "How does the extension cope with malformed .ps input?"
-//   - "PatrickScript semantic tokens provider"
+//   - "PatrickScript CodeLens provider"
 // @scry.entry.end -->
 
 // PatrickScript VS Code extension.
@@ -46,16 +47,12 @@
 // ../../site/js/ps-interpreter.ts (no fork — esbuild bundles the shared
 // module into dist/extension.js at build time):
 //
-//   1. Semantic tokens — color each `patrick` run by arity (opcode family).
-//   2. Inlay hints     — decoded mnemonic floats inline above each
-//                        word-group ("PUSH 5", "ADD", "JUMP 12", ...).
-//   3. Hover           — full mnemonic + description + stack effect.
-//
-// (CodeLens was the original directive primitive, but .ps programs are
-// typically single-line; CodeLens anchors to lines, which collapses every
-// hint onto line 0. Inlay hints are the structurally correct VS Code
-// primitive for inline overlays — they live between tokens, not above
-// lines, which matches the .ps grain.)
+//   1. Semantic tokens — color each `patrick` run by arity, with each
+//      arity bucket getting its own VS Code token type (psPush, psStack,
+//      psArith, …) so a theme can paint them distinctly.
+//   2. CodeLens       — decoded mnemonic anchored above each instruction
+//                       ("0: PUSH 5", "1: ADD", "12: JUMP 4", ...).
+//   3. Hover          — full mnemonic + description + arity/gap_arg.
 //
 // .psa is handled by the TextMate grammar in syntaxes/.
 
@@ -63,6 +60,7 @@ import * as vscode from "vscode";
 import {
   parse,
   mnemonicOf,
+  ParseError,
   WORD_TOKEN,
   WORD_LEN,
   type Instr,
@@ -124,27 +122,35 @@ function safeLocate(doc: vscode.TextDocument): LocatedInstr[] {
 }
 
 // ---------------------------------------------------------------------------
-// Semantic tokens — length-based coloring.
+// Semantic tokens — per-arity coloring.
 // ---------------------------------------------------------------------------
 
+/** Index matches the order in package.json's `semanticTokenTypes`. */
 const SEMANTIC_TYPES = [
-  "patrickscript.arity1",
-  "patrickscript.arity2",
-  "patrickscript.arity3",
-  "patrickscript.arity4",
-  "patrickscript.arity5",
-  "patrickscript.arity6",
-  "patrickscript.arity7",
-  "patrickscript.arity8",
-  "patrickscript.arity9",
-  "patrickscript.arity10",
-  "patrickscript.arity11",
-  "patrickscript.arity12",
-  "patrickscript.arity13",
-  "patrickscript.arity14",
+  "psPush",     // arity 1
+  "psStack",    // arity 2
+  "psArith",    // arity 3
+  "psCmp",      // arity 4
+  "psJump",     // arity 5
+  "psJumpz",    // arity 6
+  "psJumpnz",   // arity 7
+  "psIo",       // arity 8
+  "psMem",      // arity 9
+  "psHalt",     // arity 10
+  "psCall",     // arity 11
+  "psRet",      // arity 12
+  "psPushn",    // arity 13
+  "psPick",     // arity 14
+  "psReserved", // arity >= 15
 ];
 
 const SEMANTIC_LEGEND = new vscode.SemanticTokensLegend(SEMANTIC_TYPES, []);
+
+function arityToTokenIndex(arity: number): number {
+  if (arity < 1) return SEMANTIC_TYPES.length - 1; // reserved/invalid
+  if (arity >= 15) return SEMANTIC_TYPES.length - 1; // reserved
+  return arity - 1;
+}
 
 class PsSemanticTokensProvider
   implements vscode.DocumentSemanticTokensProvider
@@ -152,18 +158,18 @@ class PsSemanticTokensProvider
   provideDocumentSemanticTokens(
     document: vscode.TextDocument,
   ): vscode.ProviderResult<vscode.SemanticTokens> {
+    const cfg = vscode.workspace.getConfiguration("patrickscript.semanticTokens");
+    if (cfg.get<boolean>("enabled", true) !== true) {
+      return new vscode.SemanticTokens(new Uint32Array(0));
+    }
     const builder = new vscode.SemanticTokensBuilder(SEMANTIC_LEGEND);
     const located = safeLocate(document);
     for (const li of located) {
-      // Each `patrick` run gets one token per source line it touches.
-      // .ps files are typically single-line, but be safe.
       const range = new vscode.Range(
         document.positionAt(li.start),
         document.positionAt(li.wordEnd),
       );
-      const arityCapped = Math.min(Math.max(li.instr.arity, 1), 14);
-      const typeIdx = arityCapped - 1;
-      // Walk line-by-line if the range spans newlines.
+      const typeIdx = arityToTokenIndex(li.instr.arity);
       if (range.start.line === range.end.line) {
         builder.push(
           range.start.line,
@@ -189,42 +195,35 @@ class PsSemanticTokensProvider
 }
 
 // ---------------------------------------------------------------------------
-// Inlay hints — decoded mnemonic immediately before each word-run.
+// CodeLens — decoded mnemonic anchored at each instruction's word-run.
 // ---------------------------------------------------------------------------
 
-class PsInlayHintsProvider implements vscode.InlayHintsProvider {
-  provideInlayHints(
+class PsCodeLensProvider implements vscode.CodeLensProvider {
+  provideCodeLenses(
     document: vscode.TextDocument,
-    range: vscode.Range,
-  ): vscode.ProviderResult<vscode.InlayHint[]> {
-    const cfg = vscode.workspace.getConfiguration("patrickscript.inlayHints");
+  ): vscode.ProviderResult<vscode.CodeLens[]> {
+    const cfg = vscode.workspace.getConfiguration("patrickscript.codeLens");
     if (cfg.get<boolean>("enabled", true) !== true) return [];
-    const showOperand = cfg.get<boolean>("showOperand", true);
+    const showIndex = cfg.get<boolean>("showIndex", true);
 
     const located = safeLocate(document);
-    const rangeStart = document.offsetAt(range.start);
-    const rangeEnd = document.offsetAt(range.end);
-
-    const hints: vscode.InlayHint[] = [];
+    const lenses: vscode.CodeLens[] = [];
     located.forEach((li, idx) => {
-      if (li.end < rangeStart) return;
-      if (li.start > rangeEnd) return;
-      const { mnemonic, description, family } = mnemonicOf(li.instr);
-      const label = showOperand ? `${idx}: ${mnemonic}` : `${idx}: ${family}`;
-      const pos = document.positionAt(li.start);
-      const hint = new vscode.InlayHint(
-        pos,
-        label,
-        vscode.InlayHintKind.Type,
+      const { mnemonic, description } = mnemonicOf(li.instr);
+      const range = new vscode.Range(
+        document.positionAt(li.start),
+        document.positionAt(li.wordEnd),
       );
-      hint.paddingRight = true;
-      hint.tooltip = new vscode.MarkdownString(
-        `**${mnemonic}** — ${description}\n\n` +
-          `_arity_ = ${li.instr.arity}, _gap_arg_ = ${li.instr.gapArg}`,
+      const label = showIndex ? `${idx}: ${mnemonic}` : mnemonic;
+      lenses.push(
+        new vscode.CodeLens(range, {
+          title: label,
+          tooltip: description,
+          command: "", // non-actionable label
+        }),
       );
-      hints.push(hint);
     });
-    return hints;
+    return lenses;
   }
 }
 
@@ -237,13 +236,16 @@ class PsHoverProvider implements vscode.HoverProvider {
     document: vscode.TextDocument,
     position: vscode.Position,
   ): vscode.ProviderResult<vscode.Hover> {
+    const cfg = vscode.workspace.getConfiguration("patrickscript.hover");
+    if (cfg.get<boolean>("enabled", true) !== true) return undefined;
     const offset = document.offsetAt(position);
     const located = safeLocate(document);
     const li = located.find((x) => offset >= x.start && offset < x.end);
     if (!li) return undefined;
+    const idx = located.indexOf(li);
     const { mnemonic, description } = mnemonicOf(li.instr);
     const md = new vscode.MarkdownString();
-    md.appendMarkdown(`### \`${mnemonic}\`\n\n`);
+    md.appendMarkdown(`### \`${mnemonic}\`  _(instr ${idx})_\n\n`);
     md.appendMarkdown(`${description}\n\n`);
     md.appendMarkdown(
       `- **arity** \`${li.instr.arity}\` (word-run length)\n` +
@@ -274,9 +276,9 @@ export function activate(context: vscode.ExtensionContext) {
       new PsSemanticTokensProvider(),
       SEMANTIC_LEGEND,
     ),
-    vscode.languages.registerInlayHintsProvider(
+    vscode.languages.registerCodeLensProvider(
       selector,
-      new PsInlayHintsProvider(),
+      new PsCodeLensProvider(),
     ),
     vscode.languages.registerHoverProvider(selector, new PsHoverProvider()),
   );
