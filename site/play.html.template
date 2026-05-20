@@ -324,7 +324,84 @@ seeded_questions:
   footer a { color: var(--dim); text-decoration: underline; }
   footer a:hover { color: var(--accent); }
 
-  /* Reduced motion override - already no animations, but be explicit */
+  /* Phase 3 — opcode-class animations.
+     Each animation is short (<400ms), composes onto state-diff-detected
+     elements, and bypasses cleanly under prefers-reduced-motion (rule
+     below). Animations only fire when the step actually advanced; the
+     JS gates re-renders so a paused/halted render does NOT reanimate. */
+  @keyframes ps-slide-up {
+    from { transform: translateY(10px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes ps-pulse-good {
+    0%   { box-shadow: 0 0 0 0    rgba(122,223,176,0.55); }
+    60%  { box-shadow: 0 0 0 7px  rgba(122,223,176,0);    }
+    100% { box-shadow: 0 0 0 0    rgba(122,223,176,0);    }
+  }
+  @keyframes ps-pulse-accent {
+    0%   { box-shadow: 0 0 0 0    rgba(111,179,255,0.55); }
+    60%  { box-shadow: 0 0 0 7px  rgba(111,179,255,0);    }
+    100% { box-shadow: 0 0 0 0    rgba(111,179,255,0);    }
+  }
+  @keyframes ps-pulse-warm {
+    0%   { box-shadow: 0 0 0 0    rgba(240,179,102,0.55); }
+    60%  { box-shadow: 0 0 0 7px  rgba(240,179,102,0);    }
+    100% { box-shadow: 0 0 0 0    rgba(240,179,102,0);    }
+  }
+  @keyframes ps-jump-pulse {
+    0%   { background: rgba(255,217,122,0.08); }
+    30%  { background: rgba(255,217,122,0.42); }
+    100% { background: rgba(255,217,122,0.08); }
+  }
+  @keyframes ps-row-flash {
+    0%   { background-color: rgba(111,179,255,0.00); }
+    25%  { background-color: rgba(111,179,255,0.32); }
+    100% { background-color: rgba(111,179,255,0.00); }
+  }
+  @keyframes ps-io-flash {
+    0%   { background-color: var(--bg3);                  }
+    25%  { background-color: rgba(240,179,102,0.32);      }
+    100% { background-color: var(--bg3);                  }
+  }
+
+  .stack-cell.anim-push       { animation: ps-slide-up 240ms ease-out, ps-pulse-good   280ms ease-out; }
+  .stack-cell.anim-merge      { animation: ps-slide-up 200ms ease-out, ps-pulse-accent 280ms ease-out; }
+  .stack-cell.anim-from-mem   { animation: ps-slide-up 220ms ease-out, ps-pulse-accent 300ms ease-out; }
+  .stack-cell.anim-from-stdin { animation: ps-slide-up 220ms ease-out, ps-pulse-warm   300ms ease-out; }
+  .mem-table tr.anim-touched  { animation: ps-row-flash 380ms ease-out; }
+  .io-row .io-value.anim-flash { animation: ps-io-flash 380ms ease-out; }
+  .src-line.current.anim-jumped { animation: ps-jump-pulse 400ms ease-out; }
+
+  /* Call-frame indicator pill — appears next to the status row briefly on
+     CALL/RET so the return-address mechanic is visible even though we
+     don't expose the return stack in MachineState. */
+  .frame-indicator {
+    display: inline-block;
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.4rem;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: var(--accent);
+    background: rgba(111,179,255,0.08);
+    opacity: 0;
+  }
+  .frame-indicator.anim-call { animation: ps-frame-call 480ms ease-out; }
+  .frame-indicator.anim-ret  { animation: ps-frame-ret  480ms ease-out; }
+  @keyframes ps-frame-call {
+    0%   { opacity: 0; transform: translateY(-6px); }
+    25%  { opacity: 1; transform: translateY(0);    }
+    80%  { opacity: 1; transform: translateY(0);    }
+    100% { opacity: 0; transform: translateY(0);    }
+  }
+  @keyframes ps-frame-ret {
+    0%   { opacity: 0; transform: translateY(6px);  }
+    25%  { opacity: 1; transform: translateY(0);    }
+    80%  { opacity: 1; transform: translateY(0);    }
+    100% { opacity: 0; transform: translateY(-6px); }
+  }
+
+  /* Reduced motion override — cancels Phase 3 animations cleanly. */
   @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; animation: none !important; }
   }
@@ -355,6 +432,7 @@ seeded_questions:
     pc: <span class="pill" id="pc-pill">0</span>
     steps: <span class="pill" id="steps-pill">0</span>
     status: <span class="pill halted" id="status-pill">ready</span>
+    <span class="frame-indicator" id="frame-indicator" aria-hidden="true">call ↘</span>
   </span>
 </div>
 
@@ -427,6 +505,30 @@ let runHandle = null;       // setTimeout / rAF handle when auto-running
 let currentSlug = null;
 let speedIdx = 3;           // matches initial range value
 
+// Animation diff state — populated at the end of each render().
+let prevStack = [];
+let prevMemory = {};
+let prevStdinLen = 0;
+let prevStdoutLen = 0;
+let prevSteps = -1;
+
+// Media query for prefers-reduced-motion — checked once, then the CSS
+// override (animation: none !important) does the rest. We still skip the
+// classList.add work when reduced-motion is on so we don't churn DOM.
+const REDUCED_MOTION = (typeof window !== 'undefined' && window.matchMedia)
+  ? window.matchMedia('(prefers-reduced-motion: reduce)')
+  : { matches: false };
+
+// True when the current playback rate is slow enough for animations to
+// land cleanly. At 16×/32×/∞ the steps overlap the animation duration and
+// we get layout thrash; gate animations to step / 1× / 2× / 4× / 8×.
+function animationsActive() {
+  if (REDUCED_MOTION.matches) return false;
+  if (runHandle === null) return true;            // manual step
+  if (runHandle === -1)   return false;           // instant chunk mode
+  return SPEED_LEVELS_MS[speedIdx] >= 60;          // 1× … 8×
+}
+
 function init() {
   const sel = $('example-select');
   for (const slug of EXAMPLE_ORDER) {
@@ -493,7 +595,16 @@ function loadExample(slug, pushUrl) {
   }
   const ex = EXAMPLES[slug];
   interp = new PS.Interpreter(ex.source, ex.stdin || '');
+  resetAnimationState();
   render(/*firstLoad=*/true);
+}
+
+function resetAnimationState() {
+  prevStack = [];
+  prevMemory = {};
+  prevStdinLen = 0;
+  prevStdoutLen = 0;
+  prevSteps = -1;
 }
 
 function doStep() {
@@ -507,6 +618,7 @@ function doReset() {
   const ex = EXAMPLES[currentSlug];
   if (!ex) return;
   interp.reset(ex.source, ex.stdin || '');
+  resetAnimationState();
 }
 
 function toggleRun() {
@@ -699,6 +811,130 @@ function render() {
 
   const halted = (st.status !== 'running');
   $('btn-step').disabled = halted;
+
+  // --- Phase 3 animations: classify lastExecuted, diff prev↔current state,
+  //     and add transient animation classes. CSS @media reduced-motion +
+  //     animationsActive() gate suppress visual effects when appropriate.
+  const didAdvance = (st.steps !== prevSteps);
+  if (didAdvance && st.lastExecuted && animationsActive()) {
+    animateStep(st, srcEl, stackWrap, memTbody, stdinView, stdoutView);
+  }
+
+  // Save snapshot for next-render diff. Always update, even when animation
+  // is suppressed — so the next visible step still diffs against the
+  // correct baseline.
+  prevStack = st.stack.slice();
+  prevMemory = Object.assign({}, st.memory);
+  prevStdinLen = st.stdin.length;
+  prevStdoutLen = st.stdout.length;
+  prevSteps = st.steps;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 3 — opcode animations
+// ---------------------------------------------------------------------------
+
+// Families that move the instruction pointer non-sequentially.
+const JUMP_FAMILIES = new Set(['JUMP', 'JUMPZ', 'JUMPNZ', 'CALL', 'RET']);
+
+function familyOf(lastExecuted) {
+  if (!lastExecuted || !lastExecuted.mnemonic) return null;
+  return lastExecuted.mnemonic.split(' ')[0];
+}
+
+function animateStep(st, srcEl, stackWrap, memTbody, stdinView, stdoutView) {
+  const fam = familyOf(st.lastExecuted);
+  const lastIdx = st.lastExecuted.idx;
+
+  // 1) Stack — new top-of-stack cell animation.
+  const stackCells = stackWrap.querySelectorAll('.stack-cell');
+  const topCell = stackCells[stackCells.length - 1];
+  if (st.stack.length > prevStack.length) {
+    // Stack grew: PUSH-family (push, dup, load, swap-on-grow, in-char/num)
+    if (topCell) {
+      if (fam === 'LOAD') {
+        topCell.classList.add('anim-from-mem');
+      } else if (fam === 'INCHAR' || fam === 'INNUM') {
+        topCell.classList.add('anim-from-stdin');
+      } else {
+        topCell.classList.add('anim-push');
+      }
+    }
+  } else if (st.stack.length === prevStack.length && st.stack.length > 0) {
+    // Stack same height with potentially different top — DUP-with-effect,
+    // SWAP, or any arithmetic that left exactly one cell remaining. The
+    // useful case is arithmetic on a one-cell stack (rare), but we still
+    // pulse when top value changed so non-arithmetic single-cell mutations
+    // are visible.
+    const prevTop = prevStack[prevStack.length - 1];
+    const newTop = st.stack[st.stack.length - 1];
+    if (topCell && prevTop !== newTop) {
+      topCell.classList.add('anim-merge');
+    }
+  } else if (st.stack.length < prevStack.length && st.stack.length > 0) {
+    // Stack shrank but at least one cell remains — arithmetic (ADD/SUB/MUL/
+    // DIV/MOD) replaces top-N with one merged value. Pulse the new top.
+    if (topCell) topCell.classList.add('anim-merge');
+  }
+
+  // 2) Memory — flash rows whose value changed.
+  const memTouched = new Set();
+  for (const k of Object.keys(st.memory)) {
+    if (prevMemory[k] !== st.memory[k]) memTouched.add(String(k));
+  }
+  for (const k of Object.keys(prevMemory)) {
+    if (!(k in st.memory)) memTouched.add(String(k));
+  }
+  if (memTouched.size > 0) {
+    for (const tr of memTbody.querySelectorAll('tr')) {
+      const addrCell = tr.querySelector('.addr');
+      if (addrCell && memTouched.has(addrCell.textContent)) {
+        // Remove then re-add inside a reflow so consecutive STOREs to the
+        // same addr re-trigger the animation. innerHTML rebuild already
+        // gives us fresh DOM most of the time, but the row's addr cell
+        // may be the same node when the row order is stable.
+        tr.classList.remove('anim-touched');
+        void tr.offsetWidth;
+        tr.classList.add('anim-touched');
+      }
+    }
+  }
+
+  // 3) IO — flash on grow/shrink. Clear-then-add for re-trigger.
+  if (st.stdout.length > prevStdoutLen) {
+    stdoutView.classList.remove('anim-flash');
+    void stdoutView.offsetWidth;
+    stdoutView.classList.add('anim-flash');
+  }
+  if (st.stdin.length < prevStdinLen) {
+    stdinView.classList.remove('anim-flash');
+    void stdinView.offsetWidth;
+    stdinView.classList.add('anim-flash');
+  }
+
+  // 4) Jump pulse on the new current source line.
+  // A jump is either: (a) lastExecuted was in the JUMP-family, or
+  // (b) sequential expectation (lastIdx+1) doesn't match st.ip.
+  const ipJumped = (st.ip !== lastIdx + 1);
+  if (JUMP_FAMILIES.has(fam) || ipJumped) {
+    const curEl = srcEl.querySelector('.src-line.current');
+    if (curEl) {
+      curEl.classList.remove('anim-jumped');
+      void curEl.offsetWidth;
+      curEl.classList.add('anim-jumped');
+    }
+  }
+
+  // 5) Call-frame indicator: pop in on CALL, pop out on RET.
+  if (fam === 'CALL' || fam === 'RET') {
+    const frame = $('frame-indicator');
+    if (frame) {
+      frame.textContent = (fam === 'CALL') ? 'call ↘' : 'ret ↖';
+      frame.classList.remove('anim-call', 'anim-ret');
+      void frame.offsetWidth;
+      frame.classList.add(fam === 'CALL' ? 'anim-call' : 'anim-ret');
+    }
+  }
 }
 
 function bytesToDisplay(bytes) {
